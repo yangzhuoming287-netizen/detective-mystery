@@ -1465,4 +1465,175 @@ function showFatal(err){
   try{ console.error(err) }catch(e){}
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+</script><script>
+/* ===================== 追加系统：仔细看 / 证物组合 / 情绪立绘 ===================== */
+Object.assign(EVS,{
+ cm1:{name:'踩上窗沿的人',icon:'🧩',desc:'窗台那枚鞋印只有前掌、后跟没踩实；而管家说这扇窗的插销坏了七八年，只有家里几个人知道。两件事合起来——有人踩上窗沿往里探身，而且他早就知道窗是坏的。'},
+ cm2:{name:'二十分钟的空白',icon:'🧩',desc:'茶是 21:50 泡的，尸体 22:20 被发现，死亡 21:50—22:00。进过书房的人，时间窗只有二十分钟——而管家十点去添炭时，客厅是空的。'},
+ cm3:{name:'拔掉的电源',icon:'🧩',desc:'监控"停电"3 分钟 + 探头接口的新鲜刮痕 = 人为断电，不是跳闸。而且 3 分钟不够调包一幅画，说明真迹早就被换走了。'},
+ cm4:{name:'画库的两把钥匙',icon:'🧩',desc:'溶剂柜的两把钥匙：馆长、保安。加上监控是保安亲手拔的——下毒的人只能是他。'},
+ cm5:{name:'蓝图上的第二条路',icon:'🧩',desc:'蓝图未标注的窄通道 + 书库地板的 44 码鞋印 = 有人靠这条暗道进出钟楼。田边说他穿 42 码。'},
+ cm6:{name:'钟声里的证词',icon:'🧩',desc:'录音笔里的钟声与说话声 + 宴会厅没动过的酒 = 3:47 他不在宴会厅，他在钟楼。'},
+ cm7:{name:'两个人的梅素芬',icon:'🧩',desc:'两只咖啡杯（一只带口红）+ 二十年前两个女孩的合影 = 那晚店里有两位"梅姐"。'},
+ cm8:{name:'左右手的手表',icon:'🧩',desc:'死者右手戴表 + 所有老邻居都说"她左手戴表" = 死者不是梅素芬本人，而是那个右手戴表的妹妹。'},
+ cm9:{name:'冻了十年的尸体',icon:'🧩',desc:'冻尸鉴定 + 二十年前遇难者名单 = 第一夜的"金承业"其实是当年雪崩的遇难者遗体，被人从山里搬来当替身。'},
+ cm10:{name:'被拨快的一夜',icon:'🧩',desc:'全馆钟表快了 6 小时 14 分 + 提前加满油的发电机 = 凶手预知停电，并在那 36 分钟里改写了整晚的时间。'},
+ cm11:{name:'两栋一样的房子',icon:'🧩',desc:'东西馆同号钥匙牌 + 双馆对照图 = 第一夜警察进的可能是西馆。凶手不需要密室，他只需要一栋你没见过的房子。'},
+ cm12:{name:'唯一没拿钱的人',icon:'🧩',desc:'二十年前的剪报 + 遇难者名单上被划掉的那一行 + 亲属关系证明 = 高木隆的父亲，就是那个拒绝签字的人。'}
+});
+var COMBOS=[
+ {c:'c1',need:['print','t_wubo_window'],out:'cm1'},
+ {c:'c1',need:['tea','t_wubo_tea'],out:'cm2'},
+ {c:'c2',need:['cam','t_lin_camphys'],out:'cm3'},
+ {c:'c2',need:['glass','t_suwan_key'],out:'cm4'},
+ {c:'c3',need:['blueprint','shoe'],out:'cm5'},
+ {c:'c3',need:['rec','glass'],out:'cm6'},
+ {c:'c4',need:['cups','photo'],out:'cm7'},
+ {c:'c4',need:['watch','photo'],out:'cm8'},
+ {c:'c5',need:['frozen_body','victim_list'],out:'cm9'},
+ {c:'c5',need:['clock_note','gen_log'],out:'cm10'},
+ {c:'c5',need:['wing_key','twin_map'],out:'cm11'},
+ {c:'c5',need:['old_case','relation'],out:'cm12'}
+];
+/* 引擎里多处调用了 renderAll，这里补上（修复结束对话会报错的问题） */
+function renderAll(){ try{ renderScene(); renderHud() }catch(e){} }
+/* 补齐案件二的证言挂钩（原对话较短，未产出证言） */
+(function wireTestimony(){
+  function tag(caseId, whoId, keyWords, ev){
+    var C=CASES.filter(function(c){return c.id===caseId})[0]; if(!C) return;
+    (C.talks||[]).forEach(function(t){
+      if(t.id!==whoId) return;
+      (t.questions||[]).forEach(function(q){
+        if(keyWords.some(function(k){ return q.q.indexOf(k)>=0 })){
+          if(q.a && q.a[0] && !q.a[0].ev) q.a[0].ev=ev;
+        }
+      });
+    });
+  }
+  tag('c2','v_suwan',['钥匙','调包'],'t_suwan_key');
+  tag('c2','cop_lin',['监控','3 分钟','3分钟'],'t_lin_camphys');
+  tag('c2','cop_zhou',['死因'],'t_zhou_cause');
+  tag('c2','v_gu',['借走','借展'],'t_gu_loan');
+  tag('c2','v_zheng',['监控'],'t_zheng_cam');
+})();
+/* ---------- 情绪立绘 ---------- */
+function react(who,kind){
+  try{
+    var c=charOf(who); if(!c) return;
+    var sel=(c.side==='L')?'#charL':(c.side==='R'?'#charR':'#charC');
+    var el=document.querySelector(sel); if(!el) return;
+    el.classList.remove('rx-shock','rx-press','rx-break');
+    void el.offsetWidth;
+    el.classList.add('rx-'+kind);
+    if(kind==='shock'){ beep(320,0.16,'square'); beep(180,0.24,'sawtooth',0.08) }
+    if(kind==='break'){ beep(160,0.5,'sine') }
+    if(kind==='press'){ beep(500,0.06,'triangle') }
+    setTimeout(function(){ el.classList.remove('rx-'+kind) },kind==='break'?1800:1100);
+  }catch(e){}
+}
+(function injectCss(){
+  if(document.getElementById('rxcss')) return;
+  var st=document.createElement('style'); st.id='rxcss';
+  st.textContent=
+   '@keyframes rxshake{0%,100%{transform:translateX(0)}15%{transform:translateX(-9px)}30%{transform:translateX(7px)}45%{transform:translateX(-5px)}60%{transform:translateX(4px)}80%{transform:translateX(-2px)}}'+
+   '@keyframes rxjolt{0%,100%{transform:translateY(0)}40%{transform:translateY(8px)}}'+
+   '@keyframes rxsink{0%{transform:scale(1);filter:none}100%{transform:scale(.965) translateY(6px);filter:grayscale(.55) brightness(.85)}}'+
+   '#charL.rx-shock,#charR.rx-shock,#charC.rx-shock{animation:rxshake .55s ease-out;filter:brightness(1.25) saturate(1.5) hue-rotate(-12deg);position:relative}'+
+   '#charL.rx-shock::after,#charR.rx-shock::after,#charC.rx-shock::after{content:"";position:absolute;right:22%;top:16%;width:14px;height:20px;border-radius:60% 60% 55% 55%;background:linear-gradient(180deg,#bfe8ff,#6fb6e8);box-shadow:0 0 8px #9fd8ffaa;animation:rxdrop 1s ease-in forwards}'+
+   '@keyframes rxdrop{0%{transform:translateY(-6px) scale(.6);opacity:0}25%{opacity:1}100%{transform:translateY(46px) scale(1);opacity:0}}'+
+   '#charL.rx-press,#charR.rx-press,#charC.rx-press{animation:rxjolt .3s ease-out}'+
+   '#charL.rx-break,#charR.rx-break,#charC.rx-break{animation:rxsink 1.6s ease-out forwards}'+
+   '.zone.flash{box-shadow:0 0 0 3px #ffd76ee6 inset,0 0 22px #ffd76e88;background:#ffd76e26;animation:zflash 1s ease-in-out infinite}'+
+   '@keyframes zflash{0%,100%{opacity:.55}50%{opacity:1}}'+
+   '.combrow{display:flex;gap:8px;flex-wrap:wrap}'+
+   '.combrow .evrow{flex:1 1 46%}'+
+   '.pick{border-color:#ffd76e !important;background:#2a3c66 !important}';
+  document.head.appendChild(st);
+})();
+/* ---------- 仔细看 ---------- */
+function flashZones(){
+  var zs=document.querySelectorAll('.zone');
+  Array.prototype.forEach.call(zs,function(z){ z.classList.add('flash') });
+  setTimeout(function(){ Array.prototype.forEach.call(zs,function(z){ z.classList.remove('flash') }) },2600);
+}
+function lookAround(){
+  if(G.phase!=='explore'){ toast('现在不是搜索的时候'); return }
+  if(G.look===undefined) G.look=3;
+  if(G.look<=0){ runLines([{who:'ast_xiaoman',text:'沈老师，你已经把这间屋子来回扫了三遍了。再找下去也没用——换个地方，或者去问人。'}]); return }
+  G.look--;
+  var s=curScene(), total=(s.hots||[]).length, got=0;
+  (s.hots||[]).forEach(function(h,i){ if(G.seen[G.scene+'_'+i]) got++ });
+  flashZones();
+  beep(1200,0.08,'sine'); beep(1600,0.1,'sine',0.09);
+  runLines([{who:'det_shen',text:'（眯起眼，从门口开始把整间屋子扫过一遍……）'+
+    (got<total? '还有 '+(total-got)+' 处没看过。':'这间屋子已经看干净了。')}],
+    function(){ renderHud(); renderHots() });
+}
+/* ---------- 证物组合 ---------- */
+function comboUI(){
+  var picks=[];
+  function render(){
+    var h='<h3>组合线索</h3><div style="color:#8fa4c8;font-size:12.5px;margin-bottom:8px">选两件材料，看看能不能拼出新的结论（选错不会有惩罚）。</div><div class="combrow">';
+    G.ev.forEach(function(id){ var e=EVS[id]; if(!e) return;
+      h+='<div class="evrow'+(picks.indexOf(id)>=0?' pick':'')+'" data-cid="'+id+'"><div class="ic">'+evIcon(id,40)+'</div><div><b>'+e.name+'</b><small>'+(e.desc||'').slice(0,42)+'…</small></div></div>' });
+    h+='</div>';
+    h+='<div style="text-align:center;margin-top:12px">'+
+      '<button class="btn '+(picks.length===2?'':'g')+'" id="docomb" '+(picks.length===2?'':'disabled')+'>组合（已选 '+picks.length+'/2）</button> '+
+      '<button class="btn g" id="cclose">关闭</button></div>';
+    $('mbox').innerHTML=h;
+    $('modal').className='';
+    $('mbox').onclick=function(ev){
+      var t=ev.target.closest?ev.target.closest('[data-cid],#docomb,#cclose'):null; if(!t) return;
+      var cid=t.getAttribute&&t.getAttribute('data-cid');
+      if(cid){ var i=picks.indexOf(cid); if(i>=0) picks.splice(i,1); else if(picks.length<2) picks.push(cid); render(); return }
+      if(t.id==='cclose'){ closeModal(); return }
+      if(t.id==='docomb'){ doCombo(picks[0],picks[1]); }
+    };
+  }
+  render();
+}
+function doCombo(a,b){
+  var hit=COMBOS.filter(function(x){ return x.c===G.caseId &&
+    ((x.need[0]===a&&x.need[1]===b)||(x.need[0]===b&&x.need[1]===a)) })[0];
+  closeModal();
+  if(!hit){ runLines([{who:'det_shen',text:'（把两样东西并在一起看了很久）……对不上。它们讲的是两件事。'}]); return }
+  var e=EVS[hit.out];
+  addEv(hit.out);
+  setTimeout(function(){
+    runLines([{who:'det_shen',text:'等等——如果把这两样放在一起……'},{who:null,text:'【推出新结论】'+(e?e.name:'')+'\n'+(e?e.desc:'')},{who:'ast_xiaoman',text:'这条太关键了！'}]);
+  },120);
+}
+/* ---------- 挂钩：接在原有流程上 ---------- */
+(function hook(){
+  var _startCase=startCase;
+  startCase=function(cid){ _startCase(cid); G.look=3; try{ injectCss() }catch(e){} };
+  var _renderHud=renderHud;
+  renderHud=function(){
+    _renderHud();
+    if(G.phase==='court') return;
+    var h=$('hud'); if(!h) return;
+    var b1=el('button','hbtn','仔细看 '+(G.look===undefined?3:G.look));
+    b1.onclick=lookAround;
+    var b2=el('button','hbtn','组合');
+    b2.onclick=comboUI;
+    h.appendChild(b1); h.appendChild(b2);
+  };
+  var _presentTo=presentTo;
+  presentTo=function(t,qi,evid){
+    var q=t.questions[qi];
+    var hit=(q.present||[]).filter(function(p){ return p.ev===evid })[0];
+    react(t.id, hit?'shock':'press');
+    return _presentTo(t,qi,evid);
+  };
+  var _press=pressStatement;
+  pressStatement=function(){ var C=curCase(), st=C.court.statements[G.court.idx]; react(st.who,'press'); return _press() };
+  var _courtPresent=courtPresent;
+  courtPresent=function(evid){
+    var C=curCase(), st=C.court.statements[G.court.idx];
+    if(st.ev===evid){ react(st.who,'shock') } else { react(st.who,'press') }
+    return _courtPresent(evid);
+  };
+  var _caseSolved=caseSolved;
+  caseSolved=function(){ try{ var C=curCase(); react(C.court.statements[C.court.statements.length-1].who,'break') }catch(e){} return _caseSolved() };
+})();
 </script></body></html>
