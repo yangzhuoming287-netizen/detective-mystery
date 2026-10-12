@@ -641,6 +641,411 @@ CASES[4].court.statements.push(
 CASES[4].sceneCount=6;
 CASES[4].truth='凶手是驻店医生高木隆。这桩案子有三层。<br><br><b>第一层·镜像双馆</b>：雪见馆由格局完全相同的东馆与西馆并列而成，房号一致。暴雪覆盖屋顶后，从外面无法分辨。凶手把金承业约到西馆 203，行凶后利用壁龛暗格通往连廊搬移尸体。<br><br><b>第二层·无面尸</b>：第一夜被发现的"金承业"其实是一具冻存十余年的遗体——二十年前雪崩遇难者之一，被人从山间冷藏点搬到客房。所以雪地上只有一行脚印，那行脚印是他故意踩出来、并用半袋融雪盐处理掉后半段的。<br><br><b>第三层·时间位移</b>：停电的三十六分钟里，他把全馆十一个钟表全部拨快六小时十四分。所谓"三夜三案"，实际发生在同一夜与次日凌晨。老板娘雪村绫子在走廊撞见暗格动静，被他在走廊击倒。<br><br><b>动机</b>：二十年前雪见山雪崩事故，金承业出钱、作家高远圭介执笔，把责任写成"天气原因"。名单上被刀划掉的那一行，是当时的随队医生——高木隆的父亲，也是唯一拒绝签字的人。<br><br><b>决定性证据</b>：冻尸鉴定、全馆钟表快了六小时十四分的勘验记录、双馆对照图与壁龛暗格、深浅不同的脚印与融雪盐用量、被划掉名字的遇难者名单与亲属关系证明。';
 </script><script>
+/* ===================== 厚对话：案件一、案件二 ===================== */
+/* 证言类证物（可以拿去和别人对质） */
+Object.assign(EVS,{
+ t_lady_alibi:{name:'沈玉贞的证词',icon:'💬',type:'testimony',desc:'“21:30 到 22:00 我在一楼客厅看书，佣人都能证明。守仁有反锁门的习惯，我上楼也进不去。”'},
+ t_lady_money:{name:'沈玉贞谈遗产',icon:'💬',type:'testimony',desc:'“他要把一半财产捐给学校。我们为这个吵过三次。但那不至于杀人。”'},
+ t_liwei_alibi:{name:'李维安的证词',icon:'💬',type:'testimony',desc:'“我在学校图书馆改论文到十一点，刷卡记录可以查。”'},
+ t_liwei_fear:{name:'李维安的失态',icon:'💬',type:'testimony',desc:'他听到“检举信”三个字时，手里的杯子抖了一下。他说：“我不知道什么检举信。”'},
+ t_wubo_find:{name:'吴守德的发现经过',icon:'💬',type:'testimony',desc:'“22:20 我送夜宵上楼，敲门没人应。门是从里面插着的，我喊了几声才撞开。”'},
+ t_wubo_tea:{name:'吴守德谈那杯茶',icon:'💬',type:'testimony',desc:'“21:50 左右我泡了一杯送上去，敲门没人应，就放在门口小几上了。那茶到你们来还是温的，我奇怪得很。”'},
+ t_wubo_window:{name:'吴守德谈窗户',icon:'💬',type:'testimony',desc:'“先生写东西一定锁门。可窗台那扇窗的插销是坏的，从外面能推开——这事只有家里几个人知道。”'},
+ t_lin_bolt:{name:'小林澄的勘验结果',icon:'💬',type:'testimony',desc:'“门栓上有第二组极浅的擦痕，方向由外向内。有人从门外动过门栓。”'},
+ t_wu_body:{name:'吴有德的尸检结论',icon:'💬',type:'testimony',desc:'“颈部受压窒息，但先被下了镇静药。没有挣扎伤。是熟人。”'},
+ t_suwan_key:{name:'苏婉清谈钥匙',icon:'💬',type:'testimony',desc:'“画库钥匙三把：馆长、我、保安郑铁强。我那天晚上一直在展厅射灯下面，至少三个观众能看见。”'},
+ t_suwan_diary:{name:'苏婉清的坚持',icon:'💬',type:'testimony',desc:'“他逼我在赝品的鉴定书上签字。我拒绝了——我干了十二年修复，就因为不肯签这种东西。”'},
+ t_zheng_cam:{name:'郑铁强的停电说',icon:'💬',type:'testimony',desc:'“22:14 到 22:17 监控停电，那三分钟谁也没法进画库。我一直守在门口。”'},
+ t_gu_loan:{name:'古伯言的借展说法',icon:'💬',type:'testimony',desc:'“借展而已，手续齐全。合同、运输单、保险单，你要看哪一份？”'},
+ t_gu_deny:{name:'古伯言否认认识保安',icon:'💬',type:'testimony',desc:'问他和郑铁强是否认识时，他答得太快了：“不认识。”——快得像准备好的。'},
+ t_zhou_cause:{name:'周克明谈死因',icon:'💬',type:'testimony',desc:'“乙二醇中毒。咖啡杯上只有馆长自己的指纹——下毒的人没碰杯子。”'},
+ t_lin_camphys:{name:'小林澄谈监控电源',icon:'💬',type:'testimony',desc:'“探头电源是被人手动断开的，接口上有新鲜金属刮痕。不是跳闸，是拔掉的。”'}
+});
+/* ---------- 案件一：厚对话 ---------- */
+CASES[0].talks[0].greet='（她把披肩往肩上拉了拉）……周队长说你是顾问。那就问吧，我配合。';
+CASES[0].talks[0].questions=[
+ {q:'案发当晚你在哪里？',a:[
+   {t:'21:30 到 22:00，我在一楼客厅看书。'},{t:'佣人十点前后还在客厅添过炭，她能证明我没上楼。'},
+   {t:'守仁写东西有反锁门的习惯，就算我上楼，我也进不去。',ev:'t_lady_alibi'}]},
+ {q:'你和王教授最近关系怎么样？',a:[
+   {t:'不太好。很不好。'},{t:'他要把一半财产捐给学校设奖学金，我说了三次不同意。'},
+   {t:'但那不至于杀人——钱再多，我也不想守寡。',ev:'t_lady_money'}]},
+ {q:'那天晚上你穿什么鞋？',a:[
+   {t:'……在家穿拖鞋。'},{t:'你今天问过管家同样的问题了吧？他跟你说了什么？'}]},
+ {q:'教授有没有提过检举信？',a:[
+   {t:'他提过要"处理一件事"，具体是什么没说。'},{t:'（她的手指在披肩上收紧了一下）'},
+   {t:'我以为又是学校那点破事。'}]},
+ {q:'那杯放在门口的茶，你知道吗？',a:[
+   {t:'不知道。我九点半之后没上过楼。'},{t:'吴管家倒是提过先生最近睡不好，晚上要喝点热的。'}],
+  present:[
+   {ev:'t_wubo_tea',lines:[
+     {who:'det_shen',text:'管家说，那杯茶是 21:50 之后泡的，而且他一直没听到教授应门。'},
+     {who:'det_shen',text:'也就是说——21:50 到 22:20 之间，那间房里有人，但没开门。'},
+     {who:'v_wanglady',text:'……那也可能是他自己不想应。'},
+     {who:'det_shen',text:'一个被下了药、正在昏睡的人，不会"不想应"。'}],flag:'lady_tea'},
+   {ev:'t_wubo_window',lines:[
+     {who:'det_shen',text:'管家说，书房那扇窗的插销坏了很多年，只有家里几个人知道。'},
+     {who:'v_wanglady',text:'（她沉默了。）'}],flag:'lady_window'}],
+  wrong:'这些和我有什么关系？'},
+ {q:'我再问一次：21:50 你在哪。',a:[
+   {t:'（她看着窗外，过了三秒）……客厅。'},{t:'我说过很多遍了。'}]}
+];
+CASES[0].talks[1].greet='（他站起来又坐下）老师……老师怎么会……对不起，我有点乱。';
+CASES[0].talks[1].questions=[
+ {q:'案发时你在哪？',a:[
+   {t:'在学校图书馆改论文，改到十一点多。'},{t:'门禁刷卡记录能查，我进出都有记录。',ev:'t_liwei_alibi'}]},
+ {q:'你和教授的关系？',a:[
+   {t:'他是我的导师。'},{t:'上个月他让我重写第三章，说我"引用不实"。我改了三遍。'}]},
+ {q:'你知道教授在写检举信吗？',a:[
+   {t:'检举信？我、我不知道什么检举信。'},{t:'（他端起杯子，水晃出来一点）',ev:'t_liwei_fear'}]},
+ {q:'你的论文有没有问题？',a:[
+   {t:'……有一段综述是别人帮我整理的。我跟老师解释过。'},{t:'他说要查。我真的只是参考，没有抄。'}]},
+ {q:'教授出事那天，你去过他家吗？',a:[
+   {t:'没有！我三周没去过老师家了。'},{t:'上一次去还是中秋，师母煮了汤。'}],
+  present:[
+   {ev:'t_lady_money',lines:[
+     {who:'det_shen',text:'师母说，为了捐赠的事，他们吵过三次。'},
+     {who:'v_liwei',text:'……那是他们家的事。我不知道。'}],flag:'liwei_heard'},
+   {ev:'letter',lines:[
+     {who:'det_shen',text:'这封信写到一半，说你"论文存在严重抄袭"。'},
+     {who:'v_liwei',text:'（他猛地抬头）他写下来了？他真的写下来了？'},
+     {who:'det_shen',text:'你怕的不是被查，是他写下来之后，学校会撤你的学位。'},
+     {who:'v_liwei',text:'……我怕。但我没杀他。那天晚上我连图书馆的门都没出。'}],flag:'liwei_letter'}],
+  wrong:'这跟我没关系。'}
+];
+CASES[0].talks[2].greet='先生，您想问什么就问，我在王家做了三十一年。';
+CASES[0].talks[2].questions=[
+ {q:'你是怎么发现遗体的？',a:[
+   {t:'22:20，我照例给先生送夜宵。'},{t:'敲门没人应，我又喊了两声，门是从里面插着的。'},
+   {t:'我心里一急，用肩膀撞开的。',ev:'t_wubo_find'}]},
+ {q:'那杯茶是怎么回事？',a:[
+   {t:'21:50 左右我泡了一杯送上去。敲门没人应，我就放在门口的小几上了。'},{t:'夫人说不用打扰，她自己会端进去。'},
+   {t:'可你们来的时候，那杯茶还在小几上，摸着是温的。',ev:'t_wubo_tea',flag:'wubo_told'}]},
+ {q:'夫人的行动呢？',a:[
+   {t:'夫人说她一直在客厅看书。'},{t:'……不过十点前后我去添炭，客厅里没人。'},{t:'我没敢多问。',flag:'lady_absent'}]},
+ {q:'教授有什么习惯？',a:[
+   {t:'先生晚上写东西一定锁门，门栓从里面插上。'},{t:'可窗台那扇窗的插销坏了七八年，从外面能推开。这事只有家里几个人知道。',
+     ev:'t_wubo_window'}]},
+ {q:'家里还有谁有书房的钥匙？',a:[
+   {t:'只有夫人有一把备用钥匙。'},{t:'我从来不拿钥匙进先生的房间，这是规矩。',flag:'lady_key'}]},
+ {q:'教授最近状态如何？',a:[
+   {t:'睡不好。这半个月几乎每天都要喝点热的。'},{t:'他还交代过我一件事——说如果他出事，让我把那封信交给学校。'}],
+  present:[{ev:'t_lady_alibi',lines:[
+    {who:'det_shen',text:'夫人说她 21:30 到 22:00 一直在客厅，佣人能证明。'},
+    {who:'v_wubo',text:'……'},{who:'v_wubo',text:'我十点去添炭的时候，客厅是空的。'},
+    {who:'det_shen',text:'谢谢。这句话很重要。'}],flag:'broke_alibi'}],
+  wrong:'先生，这个我不知道。'}
+];
+CASES[0].talks.push({id:'cop_lin',greet:'沈顾问，我把书房又扫了一遍。你上次说的门栓，我做了痕迹对比。',questions:[
+ {q:'门栓的擦痕说明什么？',a:[
+   {t:'第二组擦痕很浅，而且方向是由外向内。'},{t:'能把门栓从外面拉上的，只有很细的东西——线、丝、或者钓鱼线。',
+     ev:'t_lin_bolt',flag:'bolt_out'}]},
+ {q:'灰烬里的金属丝？',a:[
+   {t:'我送检了。是钢琴线的残段，直径 0.4 毫米。'},{t:'烧得不算彻底，剩下三厘米左右。'}]},
+ {q:'窗台那枚脚印呢？',a:[
+   {t:'37 码，女式软底鞋。'},{t:'只有前掌，后跟没踩实——像是有人踩在窗沿上往里探身，而不是翻窗。',
+     ev:'foren_note'}]},
+ {q:'还有别的发现吗？',a:[
+   {t:'有。客厅的壁炉十点前后被添过炭，可炭是新添的，火却是旧的。'},{t:'也就是说，有人在那之后到过客厅，但没让火重新烧起来。'}]}],
+ present:[{ev:'t_wubo_tea',lines:[
+   {who:'cop_lin',text:'管家说茶是 21:50 泡的，一直没人端进去。'},
+   {who:'cop_lin',text:'那么 21:50 之后进过书房的人，时间窗只有二十分钟。'},{who:'det_shen',text:'足够了。'}],flag:'window20'}]});
+CASES[0].talks.push({id:'cop_wu',greet:'我是法医吴有德。这具尸体我做了两遍，结论不变。',questions:[
+ {q:'死因？',a:[
+   {t:'颈部受压窒息。但胃里有镇静药成分——药是先下去的，人是后死的。'},{t:'没有挣扎伤，指甲缝干净。死者对凶手毫无防备。',
+     ev:'t_wu_body'}]},
+ {q:'死亡时间能定多准？',a:[
+   {t:'初步 21:00 到 22:00。'},{t:'复核后我往前推了十分钟：21:50 到 22:00 之间。'},{t:'误差在这个区间内不会再大了。'}]},
+ {q:'镇静药的种类？',a:[
+   {t:'常见处方药，药店就能买到，没有特殊标记。'},{t:'剂量不大，只够让人犯困，不足以致死。'},{t:'所以——凶手要的不是让他死，是让他不能反抗。'}]},
+ {q:'凶手可能是女性吗？',a:[
+   {t:'从勒压的角度和力度看，不需要多大力量，着力点在喉前，姿势很低。'},{t:'站着或跪着都能完成。男性女性都可以。'}]}],
+ present:[{ev:'tea',lines:[
+   {who:'cop_wu',text:'茶里的药浓度和胃内容物吻合。'},{who:'cop_wu',text:'也就是说，凶手是把药下在茶里送进去的。'},
+   {who:'det_shen',text:'而那杯茶，是 21:50 泡的。'}],flag:'tea_drug'}]});
+</script><script>
+/* ===================== 厚对话：案件三、四、五 ===================== */
+Object.assign(EVS,{
+ t_tanabe_alibi:{name:'田边诚一的证词',icon:'💬',type:'testimony',desc:'“3:40 到钟声响，我一直和藤原小姐在宴会厅敬酒，她可以作证。”'},
+ t_tanabe_bp:{name:'田边谈蓝图',icon:'💬',type:'testimony',desc:'“蓝图一直是中村先生自己保管。我只在他书房见过一次，就摊在桌上。”'},
+ t_fuji_alibi:{name:'藤原千鹤的证词',icon:'💬',type:'testimony',desc:'“钟响的时候他好像离开过一会儿。我没在意——那时我以为他只是去拿酒。”'},
+ t_fuji_blue:{name:'藤原谈异常',icon:'💬',type:'testimony',desc:'“中村先生说过有人动了他的蓝图。他还在钟楼里加了一道锁。”'},
+ t_takagi_time:{name:'高木隆的死亡时间',icon:'💬',type:'testimony',desc:'“后脑钝器伤，当场死亡。时间在 3:40 到 3:50 之间。钟声正好掩盖了一切。”'},
+ t_takagi_door:{name:'高木隆谈钟楼',icon:'💬',type:'testimony',desc:'“图纸上只有一扇门。不过——中村先生这种建筑师，你永远该多问一句。”'},
+ t_kid_watch:{name:'陈小凯的证词',icon:'💬',type:'testimony',desc:'“她右手戴表，我看得很清楚。因为她左手戴了二十年表，我当时还觉得奇怪。”'},
+ t_kid_time:{name:'陈小凯谈时间',icon:'💬',type:'testimony',desc:'“22:20 左右，我从店门口过，看见她从后厨出来，走得很急。”'},
+ t_lin_watch:{name:'林海生的证词',icon:'💬',type:'testimony',desc:'“左手啊。她一直左手戴表。22 点她还在门口抽烟，跟我打招呼。”'},
+ t_lin_date:{name:'林海生谈异常',icon:'💬',type:'testimony',desc:'“她问我今天几号，问了两遍。以前从来没这样过。”'},
+ t_takagi_dna:{name:'高木隆的 DNA 结论',icon:'💬',type:'testimony',desc:'“死者与户籍上的梅素芬不是同一人，但相似度极高。只有一种可能：同卵双胞胎。”'},
+ t_zhou_three:{name:'周克明的三夜记录',icon:'💬',type:'testimony',desc:'“第一夜 22:20 发现金承业；第二夜 23:10 酒窖；第三夜 1:40 走廊。三夜三案。”'},
+ t_lin_foot:{name:'小林澄的脚印勘验',icon:'💬',type:'testimony',desc:'“雪地上只有一组鞋印，从侧门出去又原路折回。可凶手应该有两趟——除非他没走雪地。”'},
+ t_lin_clock:{name:'小林澄的钟表记录',icon:'💬',type:'testimony',desc:'“全馆十一个钟，走时全部比标准时间快六小时十四分。”'},
+ t_wu_frozen:{name:'吴有德谈冻尸',icon:'💬',type:'testimony',desc:'“第一夜那具尸体冻存超过十年。指甲缝里没有雪，只有陈年冰晶。”'},
+ t_inn_pipe:{name:'雪村绫子谈管道',icon:'💬',type:'testimony',desc:'“温泉管线很旧，有地方能钻人。老陈最熟那些管子。别下去。”'},
+ t_inn_word:{name:'雪村绫子的三个字',icon:'💬',type:'testimony',desc:'她只醒过一次，说了三个字：“温泉里。”'},
+ t_nov_pipe:{name:'高远圭介的指向',icon:'💬',type:'testimony',desc:'“去看管道的检修口。有人在那里面走过很多次——答案不在人身上，在这两栋房子里。”'},
+ t_nov_last:{name:'高远圭介的夹页',icon:'💬',type:'testimony',desc:'他的原稿夹页上只有一行小字：“下一个人是我。”'}
+});
+/* ---------- 案件三 ---------- */
+CASES[2].talks[0].greet='沈先生，请节哀……不，我是说，请尽快查明真相。中村先生对我一直很好。';
+CASES[2].talks[0].questions=[
+ {q:'3:47 你在哪里？',a:[
+   {t:'在宴会厅敬酒。'},{t:'藤原小姐可以作证，我们从 3:40 一直在一起，直到钟响。',ev:'t_tanabe_alibi'}]},
+ {q:'你怎么知道钟响是 3:47？',a:[
+   {t:'钟楼每小时响一次，最后一声是整点。'},{t:'那天响过之后就没再响——机芯卡住了。'}]},
+ {q:'中村先生的蓝图你见过吗？',a:[
+   {t:'见过一次，在他书房。就摊在桌上，我扫了一眼。'},{t:'蓝图上有很多标注，我看不懂。',ev:'t_tanabe_bp',flag:'tanabe_bp'}]},
+ {q:'你和中村先生有过矛盾吗？',a:[
+   {t:'没有。我做了他六年秘书。'},{t:'他脾气古怪，但对我很客气。'},{t:'……上个月他扣了我一笔差旅报销，就这一件小事。'}]},
+ {q:'钟楼的钥匙你碰过吗？',a:[
+   {t:'没有。钥匙一直在中村先生手里。'},{t:'我连钟楼都没上去过——那种地方，齿轮那么大，我进去腿都软。'}]},
+ {q:'你穿多大码的鞋？',a:[
+   {t:'42。'},{t:'（他下意识把脚往后缩了一下）'}],
+  present:[
+   {ev:'t_fuji_alibi',lines:[
+     {who:'det_shen',text:'藤原小姐说，钟响的时候你好像离开过一会儿。'},
+     {who:'v_tanabe',text:'（他的笑容僵了半秒）……我去拿酒了。就在旁边的酒柜。'},
+     {who:'det_shen',text:'从酒柜到宴会厅门口要十几秒。从那里到钟楼的侧梯，要四分钟。'},
+     {who:'v_tanabe',text:'你这是在暗示什么？'}],flag:'tanabe_away'},
+   {ev:'t_fuji_blue',lines:[
+     {who:'det_shen',text:'中村先生说有人动过他的蓝图，还在钟楼里加了一道锁。'},
+     {who:'v_tanabe',text:'……他跟我提过一次。我以为他只是疑心重。'}],flag:'tanabe_knew'}],
+  wrong:'这些和我没有关系。'},
+ {q:'宴会厅的酒，那晚有人喝吗？',a:[
+   {t:'……没什么人喝。出了这种事，谁还有心思。'},{t:'（他停了一下）你问这个做什么？'}]}
+];
+CASES[2].talks[1].greet='我没什么好说的。中村先生死了，我很遗憾，但也仅此而已。';
+CASES[2].talks[1].questions=[
+ {q:'3:40 之后你在做什么？',a:[
+   {t:'在宴会厅。田边秘书一直在我旁边，直到钟声响。'},{t:'……不过钟响的时候，他好像离开过一会儿。',
+     ev:'t_fuji_alibi'}]},
+ {q:'中村先生最近有什么异常？',a:[
+   {t:'他说有人动过他的蓝图。'},{t:'他还在钟楼里加了一道锁——他说，能进钟楼的人只有一个。',
+     ev:'t_fuji_blue'}]},
+ {q:'"只有一个人"是指谁？',a:[
+   {t:'他没说。但他说话的时候在看走廊那头。'},{t:'走廊那头是秘书的房间。'}]},
+ {q:'钟楼里有什么值钱的东西吗？',a:[
+   {t:'有一台他父亲留下的老机芯。'},{t:'不值钱，但中村先生说那是"这座馆的心脏"。'}]},
+ {q:'你为什么对这件事这么冷淡？',a:[
+   {t:'因为我不喜欢他。'},{t:'他把我们家的老宅改成现在这样——钟楼、暗门、走不完的走廊。我小时候在这里迷路过三次。'}],
+  present:[{ev:'blueprint',lines:[
+    {who:'det_shen',text:'蓝图上有一条未标注的窄通道，从书库通向机芯层。'},
+    {who:'v_fujiwara',text:'（她盯着那张图纸看了很久）……我小时候，墙里确实有声音。'},
+    {who:'v_fujiwara',text:'我一直以为是我记错了。'}],flag:'fuji_wall'}]}
+];
+CASES[2].talks[2].greet='死亡时间是准确的，我确定。你们与其问我，不如去问秘书。';
+CASES[2].talks[2].questions=[
+ {q:'死因和死亡时间？',a:[
+   {t:'后脑钝器伤，当场死亡。'},{t:'时间在 3:40 到 3:50 之间。钟声正好掩盖了一切。',ev:'t_takagi_time'}]},
+ {q:'凶器是什么？',a:[
+   {t:'钟楼里的黄铜齿轮轴。'},{t:'重、圆、有棱——而且上面本来就沾着机油，血不容易看出来。'}]},
+ {q:'钟楼只有一扇门吗？',a:[
+   {t:'图纸上是的。'},{t:'不过——中村先生这种建筑师，你永远该多问一句。',ev:'t_takagi_door',flag:'takagi_door'}]},
+ {q:'你和中村先生的关系？',a:[
+   {t:'我是他家的私人医生，十年了。'},{t:'他有心悸的毛病，我每个月来两次。'},{t:'……他也给我看过那份蓝图，问我"人能不能在这里藏三天"。'}]},
+ {q:'你怎么回答他的？',a:[
+   {t:'我说不能，那太窄了。'},{t:'（他顿了顿）他笑了笑，说"有人可以"。'}],
+  present:[{ev:'t_tanabe_bp',lines:[
+    {who:'det_shen',text:'田边说，他只在书房见过一次蓝图。'},
+    {who:'v_takagi',text:'那不对。'},{who:'v_takagi',text:'中村先生把蓝图收在书房保险柜里，从来不摊在桌上。'},
+    {who:'det_shen',text:'也就是说，田边不是"看过一眼"——他是专门去看的。'}],flag:'bp_lie'}]}
+];
+CASES[2].talks.push({id:'cop_lin',greet:'沈顾问，钟楼外围我都勘过了。给你三样东西。',questions:[
+ {q:'雪地脚印说明了什么？',a:[{t:'只有一组鞋印，从侧门出去又原路折回。',ev:'t_lin_foot'},{t:'可凶手应该有两趟。除非——他根本没走雪地。'}]},
+ {q:'钟楼的锁呢？',a:[{t:'锁芯里有新划痕，钥匙是被人从外面塞回去的。'},{t:'塞的时候歪了一下，划痕就是这么来的。'}]},
+ {q:'长梯上有什么？',a:[{t:'梯脚陷进泥里，说明承过人。'},{t:'但梯面上没有鞋印——只有布纹，像是裹了布再踩上去。'}]},
+ {q:'还有吗？',a:[{t:'有。书库地板上有一枚 44 码男鞋印，鞋跟内侧磨损严重。'},{t:'那个房间本该没人进去——它是通往机芯层那条窄道的入口。'}]},
+ {q:'宴会厅那晚有人喝醉吗？',a:[{t:'没有。酒几乎没动。'},{t:'真正喝掉的是茶水——厨房那壶水，凌晨就空了。'}],
+  present:[{ev:'t_tanabe_alibi',lines:[{who:'cop_lin',text:'田边说 3:40 到钟响一直和藤原小姐在一起。'},{who:'cop_lin',text:'但从宴会厅侧门到书库，走快一点只要两分半。'},{who:'det_shen',text:'够了。'}]}]}
+]});
+/* ---------- 案件四 ---------- */
+CASES[3].talks[0].greet='我真的看见了！她穿的是深色外套！你们为什么不相信我？';
+CASES[3].talks[0].questions=[
+ {q:'你看到的是什么时间？',a:[
+   {t:'22:20 左右。我从店门口过，看见她从后厨出来，走得很急。',ev:'t_kid_time'}]},
+ {q:'她戴表了吗？',a:[
+   {t:'戴了，在右手。'},{t:'我记得特别清楚，因为我当时还觉得奇怪——梅姐左手戴表戴了二十年。',ev:'t_kid_watch'}]},
+ {q:'你认识梅姐多久了？',a:[
+   {t:'从小学就在她店里写作业，写了八年。'},{t:'她左手戴表，我闭着眼都知道。'}]},
+ {q:'那晚她的样子有什么不对？',a:[
+   {t:'手一直在抖。'},{t:'还有——她没叫我"小凯"。她以前每次都叫。'},{t:'她只是看了我一眼。'}]},
+ {q:'如果那个人不是梅姐呢？',a:[
+   {t:'不可能！那张脸……'},{t:'（他停住了）'}],
+  present:[
+   {ev:'photo',lines:[
+     {who:'det_shen',text:'二十年前的照片上，是两个长得一模一样的女孩。'},
+     {who:'v_kid',text:'……两个？'},{who:'det_shen',text:'一个手表在左腕，一个在右腕。'},
+     {who:'v_kid',text:'（他退了一步）所以我看到的那个……是另一个？'}],flag:'kid_twin'},
+   {ev:'t_lin_watch',lines:[
+     {who:'det_shen',text:'码头那位林海生说，22 点他还在门口跟"梅姐"说过话，左手戴表，穿米色风衣。'},
+     {who:'v_kid',text:'那跟我看到的不是同一个人……'},{who:'det_shen',text:'或者，是两个不同的人。'}],flag:'kid_vs_lin'}],
+  wrong:'这跟我看到的有关系吗？'}
+];
+CASES[3].talks[1].greet='警察同志，我跟梅素芬认识十五年了。她不是那种会惹事的人。';
+CASES[3].talks[1].questions=[
+ {q:'你今晚见到她了吗？',a:[
+   {t:'见到了！22 点左右，她在门口抽烟，穿米色风衣。'},{t:'我还跟她打了招呼，她朝我点了点头。',ev:'t_lin_watch'}]},
+ {q:'她有什么异常？',a:[
+   {t:'她问我今天几号，问了两遍。'},{t:'我以为她累了。她这些年一个人撑店，很辛苦。',ev:'t_lin_date'}]},
+ {q:'她戴表吗？',a:[
+   {t:'左手。她一直左手戴表。'},{t:'这点我敢跟任何人赌。'}]},
+ {q:'你确定是 22 点？',a:[
+   {t:'我十点下工，从码头走过来大概十分钟。'},{t:'我走到店门口的时候，听见码头的钟敲了十下。'},{t:'……不过那钟慢了，谁都知道。'}]},
+ {q:'她当时穿的外套是什么颜色？',a:[
+   {t:'米色，风衣，到膝盖。'},{t:'她常穿那件——入秋之后几乎天天穿。'}],
+  present:[
+   {ev:'t_kid_watch',lines:[
+     {who:'det_shen',text:'有个少年说，22:20 从后厨出来的人穿深色外套、右手戴表。'},
+     {who:'v_lin',text:'那不可能！'},{who:'v_lin',text:'……除非我看到的和她看到的，不是同一个"她"。'}],flag:'lin_twin'},
+   {ev:'cups',lines:[
+     {who:'det_shen',text:'两只咖啡杯，一只杯沿有口红，一只没有。'},
+     {who:'v_lin',text:'梅姐从来不喝第二杯。她说喝多了睡不着。'}],flag:'lin_cups'}],
+  wrong:'这跟梅姐有什么关系？'}
+];
+CASES[3].talks[2].greet='DNA 结果出来了。这个结论相当罕见——我做这一行二十年，只见过两次。';
+CASES[3].talks[2].questions=[
+ {q:'DNA 说明了什么？',a:[
+   {t:'死者与户籍上的梅素芬不是同一个人，但相似度极高。'},{t:'只有一种可能：同卵双胞胎。',ev:'t_takagi_dna'}]},
+ {q:'能分辨谁是姐姐谁是妹妹吗？',a:[
+   {t:'DNA 不能。'},{t:'但生活习惯可以——手表、口红、口头禅。'},{t:'办案靠的是这些，不是实验室。'}]},
+ {q:'死亡时间？',a:[
+   {t:'22:30 到 23:00 之间。'},{t:'也就是说，两个目击者看到的时间，正好都在死亡前后。'}]},
+ {q:'她死前有挣扎吗？',a:[
+   {t:'有。指甲里有皮肤组织。'},{t:'也就是说——凶手身上应该有抓痕。'}],
+  present:[{ev:'will',lines:[
+    {who:'det_shen',text:'遗嘱把店铺留给"妹妹"。可户籍上，梅素芬是独生女。'},
+    {who:'v_takagi',text:'那这份遗嘱是伪造的身份安排。'},{who:'v_takagi',text:'也就是说，妹妹早就准备好了要顶替姐姐。'}],flag:'will_read'}]}
+];
+/* ---------- 案件五 ---------- */
+CASES[4].talks[0].greet='沈砚清，先说结论：没人能进出这座馆。凶手就在这几个人里，而且他还在这栋房子里。';
+CASES[4].talks[0].questions=[
+ {q:'三起案子的时间？',a:[
+   {t:'第一夜 22:20 发现金承业；第二夜 23:10 酒窖；第三夜 1:40 走廊。'},{t:'三夜三案。',ev:'t_zhou_three'}]},
+ {q:'停电那三十六分钟呢？',a:[
+   {t:'22:05 到 22:41。发电机自动启动。'},{t:'但油料是提前加满的——有人知道会停电，甚至可能就是他弄的。',ev:'gen_log'}]},
+ {q:'脚印查清楚了吗？',a:[
+   {t:'小林查了三遍。雪地上只有一行，出去又回来。',ev:'t_lin_foot'}]},
+ {q:'你有几个手下？',a:[
+   {t:'只有小林和老吴。'},{t:'我们三个是被暴雪困在这里的——本来是上山查另一起案子。'},{t:'换句话说，这栋房子里只有三支枪，其中两支在你们手里。'}]},
+ {q:'这些人里谁最可疑？',a:[
+   {t:'按常理是老板娘，因为她是主人。'},{t:'但按现场看——第一夜的窗户从内侧打开，雪地上只有一行脚印。'},{t:'我倒觉得，凶手很熟悉这栋房子。'}]},
+ {q:'如果凶手是医生呢？',a:[
+   {t:'高木隆？他一直在客房照顾老板娘。'},{t:'不过说实话，他照顾老板娘也太久了。',flag:'zhou_hint_takagi'}],
+  present:[
+   {ev:'clock_note',lines:[
+     {who:'cop_zhou',text:'……十一个钟都快了六小时十四分？'},
+     {who:'cop_zhou',text:'那"三夜三案"就不成立了。这不是三夜，是一夜。'},
+     {who:'det_shen',text:'所以我们有的不是连环杀人，是一次时间被拉长了的谋杀。'}],flag:'zhou_time'},
+   {ev:'twin_map',lines:[
+     {who:'cop_zhou',text:'东馆、西馆格局一模一样，房号也一样。'},
+     {who:'cop_zhou',text:'……那第一夜的"客房"，我们可能从一开始就找错了楼。'}],flag:'zhou_twin'}],
+  wrong:'这个和案子对不上。'}
+];
+CASES[4].talks[1].greet='沈顾问，我把能采的都采了。你先看这三样。';
+CASES[4].talks[1].questions=[
+ {q:'雪地脚印到底怎么回事？',a:[
+   {t:'一行脚印从侧门出去又折回。'},{t:'但凶手如果走地下管道，他根本不用踩雪。',ev:'t_lin_foot',flag:'lin_pipe'},
+   {t:'而且那行脚印前半段深、后半段浅——回程的人比去程轻。',ev:'deep_print'}]},
+ {q:'检修口有什么？',a:[
+   {t:'水渍、松针，还有硫磺味。'},{t:'管子里有温泉水，出来的人鞋上一定带味道。',ev:'pipe_wet'}]},
+ {q:'怀表为什么停在 1:20？',a:[
+   {t:'1:20 太晚了。'},{t:'我倾向于——怀表是被"调"过的，好让死亡时间看起来更晚。',ev:'watch_stop'}]},
+ {q:'你还发现什么了？',a:[
+   {t:'全馆十一个钟，走时全部比标准时间快六小时十四分。',ev:'t_lin_clock'},{t:'包括走廊那个、厨房那个、还有我自己的手表。'},
+   {t:'不是巧合。是有人一个一个拨过去的。'}]},
+ {q:'那两栋楼呢？',a:[
+   {t:'我来的时候就觉得怪。东馆和西馆的走廊长度一样，房间数一样，连房号都一样。'},{t:'昨晚雪盖住屋顶以后，我差点走错楼。',ev:'twin_map'}]},
+ {q:'第一夜的尸体你怎么看？',a:[
+   {t:'老吴说那具尸体冻了很久。'},{t:'如果那是别人——那第一夜死的就不是金承业。',ev:'t_wu_frozen'}]}];
+CASES[4].talks[2].greet='吴有德。这里没有实验室，我只能做最粗的，但有些事用手也能摸出来。';
+CASES[4].talks[2].questions=[
+ {q:'金承业的死因？',a:[
+   {t:'颈部勒压窒息。胃里有镇静剂，先被下药。'},{t:'勒痕方向从右后方来，凶手比他高。'}]},
+ {q:'高远圭介呢？',a:[
+   {t:'后脑撞击，凶器是酒瓶。'},{t:'指甲里有羊毛纤维——他抓过凶手的衣服。',ev:'bottle'}]},
+ {q:'第一夜的尸体有什么特别？',a:[
+   {t:'有，而且很不对劲。'},{t:'组织冻存超过十年，指甲缝里没有雪，只有陈年冰晶。',ev:'t_wu_frozen'},
+   {t:'这不是当晚死的人。这是一具被搬来的旧尸体。'}]},
+ {q:'雪村绫子还有救吗？',a:[
+   {t:'颅脑伤。能不能撑到救援看她命。'},{t:'她只醒过一次，说了三个字——温泉里。',ev:'t_inn_word',flag:'innkeeper_word'}]},
+ {q:'能判断第一夜死亡的真实时间吗？',a:[
+   {t:'不能，因为没有那具尸体的原生数据。'},{t:'但反过来——如果那具尸体不是金承业，那金承业是什么时候死的？'},{t:'我们连他的尸体都没找到。'}],
+  present:[{ev:'relation',lines:[
+    {who:'det_shen',text:'高木隆的父亲，是二十年前那支登山队的随队医生。'},
+    {who:'cop_wu',text:'……那具冻尸，会不会就是当年的遇难者？'},
+    {who:'cop_wu',text:'山里确实有冷藏点，登山协会用来暂存遗体的。'}],flag:'wu_frozen_link'}]}
+];
+CASES[4].talks[3].greet='（他坐得很端正）我是这里的驻店医生。你们该去问管家，或者老板娘。';
+CASES[4].talks[3].questions=[
+ {q:'三起案发时你在哪？',a:[
+   {t:'停电那三十六分钟我在药房找手电。'},{t:'之后一直在客房照顾老板娘，没离开过。'}]},
+ {q:'你的药箱少了一支镇静剂。',a:[
+   {t:'那是前两天给金承业开的。他睡眠不好。',flag:'med_claim'}]},
+ {q:'金承业为什么要吃镇静剂？',a:[
+   {t:'他和高远圭介最近都失眠。'},{t:'二十年前的事，压着他们。'}]},
+ {q:'二十年前什么事？',a:[
+   {t:'雪见山雪崩。七个人上山，回来六个。'},{t:'不对——是回来五个，加上一个被抬下来的。'}]},
+ {q:'那次事故和你有关吗？',a:[
+   {t:'那是我老师的手术。我只是助手。'},{t:'（他沉默了几秒）',ev:'old_case'}]},
+ {q:'你去过西馆吗？',a:[
+   {t:'西馆？'},{t:'（他抬起眼看我）西馆和东馆是一样的。你问这个，是有人跟你说了什么？'}]},
+ {q:'那扇壁龛后面的暗格呢？',a:[
+   {t:'（他笑了一下）这座馆是二十年前改的，暗格多得很。'},{t:'我住在这里两年，也没走遍。'}],
+  present:[
+   {ev:'med_kit',lines:[
+     {who:'det_shen',text:'登记本上这一行是空白的。你给金承业开的那支，从来没登记过。'},
+     {who:'v_takagi',text:'……那是疏忽。'},{who:'det_shen',text:'疏忽一次可以。可你的药箱里少的那支，正好用在第一夜。'}],flag:'med_lie'},
+   {ev:'t_wu_frozen',lines:[
+     {who:'det_shen',text:'第一夜的尸体冻存超过十年。'},
+     {who:'v_takagi',text:'（他的手指在膝上收紧了）'},{who:'v_takagi',text:'……那不该被验出来的。'}],flag:'takagi_slip'}],
+  wrong:'这和我说的没有矛盾。'}
+];
+CASES[4].talks[4].greet='客人……这种时候，我只能请你们相信我们旅馆。三十年了，从没出过事。';
+CASES[4].talks[4].questions=[
+ {q:'这座馆以前是做什么的？',a:[
+   {t:'以前是登山队的疗养所。二十年前出过事，之后才改成旅馆。',flag:'inn_history'}]},
+ {q:'地下室有什么？',a:[
+   {t:'酒窖，还有温泉的引水管线。'},{t:'老陈最熟那些管子。不过他也走了三年了。',ev:'pipe_map'}]},
+ {q:'东西两馆为什么要建成一模一样？',a:[
+   {t:'当年是两个人出的钱，谁也不肯让谁的格局。'},{t:'所以东馆、西馆一模一样，连房号都一样。'}],
+  present:[{ev:'wing_key',lines:[
+    {who:'det_shen',text:'前台抽屉里同一房号有两把钥匙牌：东 203、西 203。'},
+    {who:'v_innkeeper',text:'……是。客人常常走错。'},{who:'v_innkeeper',text:'尤其是下雪的时候。'}],flag:'inn_twin'}]},
+ {q:'雪村绫子女士说的"温泉里"，你懂吗？',a:[
+   {t:'（她脸色变了）温泉管线很旧，有地方能钻人。'},{t:'别下去。那是这座馆的血管。',ev:'t_inn_pipe',flag:'pipe_warn'}]},
+ {q:'高木医生在这里住了多久？',a:[
+   {t:'两年。他不常和人说话。'},{t:'但他对这座馆很熟——比我还熟。有时候他半夜在走廊里走，连灯都不开。'}]},
+ {q:'金承业他们为什么来这里？',a:[
+   {t:'他们说想看看"当年的事故现场"。'},{t:'每年这个时候都有人来。今年来了两个。'}],
+  present:[{ev:'old_case',lines:[
+    {who:'det_shen',text:'二十年前的雪崩事故，七人上山，回来六个。'},
+    {who:'v_innkeeper',text:'……不是六个。'},{who:'v_innkeeper',text:'是五个走着回来的，第六个是被抬下来的。'},
+    {who:'v_innkeeper',text:'还有第七个，从来没找到。'}],flag:'seven_list'}]}
+];
+CASES[4].talks[5].greet='（他把写满字的纸推过来）凶手总会留下一个多余的动作。我已经数到第七个了。';
+CASES[4].talks[5].questions=[
+ {q:'你为什么写下"下一个人是我"？',a:[
+   {t:'因为我已经知道是谁。金承业死后，我就写下了这句话。',flag:'novelist_knew'},{t:'可惜，我还是慢了一步。'}]},
+ {q:'凶手是谁？',a:[
+   {t:'去看管道的检修口。有人在那里面走过很多次。',ev:'t_nov_pipe'},{t:'答案不在人身上，在这两栋房子里。'}]},
+ {q:'二十年前的医疗事故呢？',a:[
+   {t:'那不是事故，是一次交易。'},{t:'金承业出钱，我写了报告——把"延误"写成"天气"。',ev:'old_case'},
+   {t:'我们两个都拿了钱。'}]},
+ {q:'还有第三个人吗？',a:[
+   {t:'有。那个拒绝签字的年轻医生。'},{t:'他一分钱没拿，还被吊销了执照。'},{t:'后来我听说他儿子也学了医。'}]},
+ {q:'你怕他儿子吗？',a:[
+   {t:'怕。'},{t:'所以我来这里。我想当面跟他说一句对不起。'},{t:'——结果金承业先死了。'}],
+  present:[
+   {ev:'relation',lines:[
+     {who:'det_shen',text:'高木隆的父亲，就是那个拒绝签字的随队医生。'},
+     {who:'v_novelist',text:'（他放下笔，第一次直视我）'},{who:'v_novelist',text:'他知道我在这里。他是来找我的。'}],flag:'nov_target'},
+   {ev:'twin_map',lines:[
+     {who:'det_shen',text:'东馆和西馆格局完全相同。第一夜我们进的可能是西馆。'},
+     {who:'v_novelist',text:'……那就说得通了。'},{who:'v_novelist',text:'他不需要密室。他只需要一栋你没见过的房子。'}],flag:'nov_twin'}],
+  wrong:'这和我写的对不上。'}
+];
+CASES[4].talks[5].greet='（他把写满字的纸推过来）';
+</script><script>
 /* ===================== 推理游戏引擎 ===================== */
 var G={caseId:null, scene:null, ev:[], seen:{}, flags:{}, phase:'explore', talk:null, qIdx:0,
   court:null, penalty:3, log:[], unlocked:1, done:{}};
@@ -762,13 +1167,27 @@ function talkTo(cid){
   if(!t){ runLines([{who:cid,text:'（他/她没有想说的。）'}]); return }
   G.phase='talk'; G.talk=cid;
   var lines=[{who:cid,text:t.greet||'……'}];
-  lines.push({who:cid,text:'',choices:t.questions.map(function(q,qi){
-    return {t:'◆ '+q.q, act:function(){ askQ(t,qi) }};
-  }).concat([{t:'（结束对话）',act:function(){ dlgShow(false); G.phase='explore'; G.talk=null; renderAll() }}])});
+  // 可用问题：需要指定证物/证言、或问过某题后才出现
+  var avail=[];
+  t.questions.forEach(function(q,qi){
+    if(q.need && !hasEv(q.need)) return;
+    if(q.needFlag && !G.flags[q.needFlag]) return;
+    if(q.after!==undefined && !G.flags['asked_'+t.id+'_'+q.after]) return;
+    avail.push(qi);
+  });
+  var chs=avail.map(function(qi){
+    var q=t.questions[qi], asked=G.flags['asked_'+t.id+'_'+qi];
+    return {t:(asked?'· ':'◆ ')+q.q, act:function(){ askQ(t,qi) }};
+  });
+  if(!chs.length) chs.push({t:'（他现在没什么想说的了——先去别处找找线索）',act:function(){ dlgShow(false); G.phase='explore'; G.talk=null; renderAll() }});
+  chs.push({t:'（结束对话）',act:function(){ dlgShow(false); G.phase='explore'; G.talk=null; renderAll() }});
+  lines.push({who:cid,text:'',choices:chs});
   runLines(lines);
 }
 function askQ(t,qi){
   var q=t.questions[qi]; logAdd('询问：'+q.q+' → '+charOf(t.id).name);
+  G.flags['asked_'+t.id+'_'+qi]=true;
+  if(q.unlockFlag) G.flags[q.unlockFlag]=true;
   var lines=(q.a||[]).map(function(x){ return {who:x.w||t.id, text:x.t, ev:x.ev, flag:x.flag} });
   // 该问题若配置了"矛盾点"，询问后开放"出示证物"
   if(q.reveal) lines.push({who:null,text:'（这里似乎可以用证物反驳 —— 点右上「出示证物」。）',flag:'can_present_'+t.id+'_'+qi});
@@ -777,10 +1196,14 @@ function askQ(t,qi){
   runLines(lines);
 }
 function presentUI(cb){
-  var h='<h3>出示证物</h3>';
+  var h='<h3>出示（物证或证言）</h3>';
   h+='<div class="evrow" style="border-color:#5d7fb8" data-cancel="1"><div class="ic">✕</div><div><b>取消</b></div></div>';
-  G.ev.forEach(function(id){ var e=EVS[id]; if(!e) return;
-    h+='<div class="evrow" data-ev="'+id+'"><div class="ic">'+e.icon+'</div><div><b>'+e.name+'</b><small>'+e.desc+'</small></div></div>' });
+  var order=G.ev.slice().sort(function(a,b){
+    var A=EVS[a]||{}, B=EVS[b]||{};
+    return (A.type==='testimony'?0:1)-(B.type==='testimony'?0:1) });
+  order.forEach(function(id){ var e=EVS[id]; if(!e) return;
+    h+='<div class="evrow" data-ev="'+id+'"><div class="ic">'+e.icon+'</div><div><b>'+e.name+
+      (e.type==='testimony'?' <span style="color:#8fe08f;font-size:10.5px">证言</span>':'')+'</b><small>'+e.desc+'</small></div></div>' });
   openModal(h, function(target){
     if(target.getAttribute('data-cancel')){ closeModal(); return }
     var id=target.getAttribute('data-ev'); if(!id) return;
@@ -865,11 +1288,22 @@ function renderHud(){
   [b1,b2,b3,b4,b5].forEach(function(b){ h.appendChild(b) });
 }
 function showEvidence(){
-  var h='<h3>证物清单（'+G.ev.length+'）</h3>';
-  if(!G.ev.length) h+='<div style="color:#8fa4c8;font-size:13px">还没有找到任何证物，去现场调查吧。</div>';
-  G.ev.forEach(function(id){ var e=EVS[id]; if(!e) return;
-    h+='<div class="evrow"><div class="ic">'+e.icon+'</div><div><b>'+e.name+'</b><small>'+e.desc+'</small></div></div>' });
-  h+='<div style="text-align:center;margin-top:12px"><button class="btn g" id="evclose">关闭</button></div>';
+  var h='<h3>案件资料（'+G.ev.length+'）</h3>';
+  if(!G.ev.length) h+='<div style="color:#8fa4c8;font-size:13px">还没有找到任何线索，去现场调查吧。</div>';
+  function group(title,list,cls){
+    if(!list.length) return;
+    h+='<div style="font-size:12px;color:#c9a227;margin:8px 0 4px">'+title+'</div>';
+    list.forEach(function(id){ var e=EVS[id]; if(!e) return;
+      h+='<div class="evrow'+(cls?' '+cls:'')+'" style="'+(e.fake?'opacity:.92;border-color:#7a5a2a':'')+'"><div class="ic">'+e.icon+'</div><div><b>'+e.name+
+        (e.fake?' <span style="color:#c9a227;font-size:10.5px">（待核实）</span>':'')+'</b><small>'+e.desc+'</small></div></div>' });
+  }
+  var testi=G.ev.filter(function(id){ return EVS[id]&&EVS[id].type==='testimony' });
+  var real=G.ev.filter(function(id){ return EVS[id]&&EVS[id].type!=='testimony'&&!EVS[id].fake });
+  var fake=G.ev.filter(function(id){ return EVS[id]&&EVS[id].fake });
+  group('证言记录（可以拿去和别人对质）',testi);
+  group('物证',real);
+  group('来源存疑的线索',fake);
+  h+='<div style="text-align:center;margin-top:14px"><button class="btn g" id="evclose">关闭</button></div>';
   openModal(h, function(t){ if(t.id==='evclose') closeModal() });
 }
 function showBrief(){
