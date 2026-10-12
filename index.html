@@ -23,6 +23,12 @@ html,body{margin:0;height:100%;background:#05080f;color:#eef2f8;overflow:hidden;
  background-size:contain;background-repeat:no-repeat;background-position:bottom center;opacity:0;transition:opacity .25s}
 #charC.on{opacity:1}
 #charR.small,#charL.small{height:70%;opacity:.85}
+/* 场景里的物件：不显示名称，玩家自己找 */
+.obj{position:absolute;cursor:zoom-in;z-index:7;transition:transform .12s,filter .12s;filter:drop-shadow(0 5px 10px #000b)}
+.obj img{width:100%;border-radius:9px;border:1px solid #ffffff33;display:block}
+.obj.miss{background:radial-gradient(circle,#ffd76e22,transparent 70%);border:1px dashed #ffd76e66;border-radius:9px;width:44px!important;height:44px}
+.obj:active{transform:scale(1.06)!important;filter:brightness(1.15) drop-shadow(0 6px 14px #000)}
+#stage{cursor:crosshair}
 /* 调查热点 */
 .hot{position:absolute;border-radius:50%;border:2px solid #ffd76e;background:#ffd76e33;
  display:flex;align-items:center;justify-content:center;font-size:11px;color:#ffe8a8;
@@ -95,7 +101,7 @@ html,body{margin:0;height:100%;background:#05080f;color:#eef2f8;overflow:hidden;
   <div id="stage">
     <div id="sceneBg"></div>
     <div id="charL"></div><div id="charR"></div><div id="charC"></div>
-    <div id="hud2"><div id="locName">—</div></div>
+    <div id="hud2"><div id="locName">—</div><div id="objCount"></div></div>
     <div id="hud"></div>
     <div id="courtBar" class="hide"></div>
   </div>
@@ -1165,11 +1171,20 @@ function startCase(cid){
   G.caseId=cid; G.phase='explore'; G.ev=[]; G.seen={}; G.flags={}; G.talk=null; G.log=[];
   G.penalty=3; G.court=null; G.scene=C.scenes[0].id;
   ensure('title').classList.add('hide');
+  bindStageSearch();
   renderScene();
   runLines(C.intro, function(){ G.phase='explore'; renderAll() });
 }
 function curCase(){ return caseOf(G.caseId) }
 function curScene(){ var C=curCase(); return C.scenes.filter(function(s){return s.id===G.scene})[0] }
+function bindStageSearch(){
+  var st=$('stage');
+  if(st._bound) return; st._bound=true;
+  st.addEventListener('click', function(e){
+    if(e.target.closest && e.target.closest('.obj')) return;
+    searchBlank();
+  });
+}
 function renderScene(){
   var s=curScene(); if(!s) return;
   $('sceneBg').style.backgroundImage=bgOf(s.bg);
@@ -1190,19 +1205,37 @@ function renderHots(){
   var s=curScene(); if(!s||G.phase!=='explore') return;
   (s.hots||[]).forEach(function(h,i){
     if(G.seen[G.scene+'_'+i]) return;
-    var d=el('div','hot',h.label);
+    // 道具直接摆在场景里：只画物品本身，不给名字、不给提示圈
+    var d=el('div','obj');
     d.style.left=(h.x*100)+'%'; d.style.top=(h.y*100)+'%';
-    d.style.width=(h.w*100)+'%'; d.style.minWidth='54px'; d.style.height=(h.h*100)+'%'; d.style.minHeight='54px';
-    d.onclick=function(){ examine(h,i) };
+    var w=(h.w||0.10)*100; if(w<7) w=7; if(w>12) w=12;
+    d.style.width=w+'%';
+    d.style.transform='rotate('+((h.rot!==undefined)?h.rot:(((i*37)%11)-5))+'deg)';
+    var src = h.ev ? ('ev/'+h.ev+'.jpg') : ('img/'+(h.who||'v_wang')+'.jpg');
+    d.innerHTML='<img src="'+src+'" alt="" onerror="this.style.display='none";this.parentNode.classList.add('miss')">';
+    d.onclick=function(e){ e.stopPropagation(); examine(h,i) };
     $('stage').appendChild(d);
   });
+  var cnt=$('objCount');
+  if(cnt){
+    var total=(s.hots||[]).length, got=0;
+    (s.hots||[]).forEach(function(h,i){ if(G.seen[G.scene+'_'+i]) got++ });
+    cnt.textContent='本场景已发现 '+got+' / '+total;
+  }
 }
+var BLANK=['这里积了一层薄灰，什么也没有。','墙纸的接缝翘起来一点，仅此而已。','窗外是白茫茫一片，没有脚印。','地毯上一道旧痕，看得出是家具挪动留下的。','空气里有股霉味，但找不到源头。','这儿什么都没有。再仔细看看别处。'];
 function examine(h,i){
   G.seen[G.scene+'_'+i]=true; removeHots();
   if(h.ev) addEv(h.ev);
   if(h.flag) G.flags[h.flag]=true;
-  var lines=[{who:null,text:'【调查：'+h.label+'】\n'+(h.look||'……没什么特别的。')}];
+  var title=h.label?('【发现了什么】\n'):'';
+  var lines=[{who:null,text:title+(h.look||'……没什么特别的。')}];
   runLines(lines, function(){ renderHots() });
+}
+/* 点空场景：只给一句模糊反馈 */
+function searchBlank(){
+  if(G.phase!=='explore'||DLG.lines.length) return;
+  runLines([{who:null,text:BLANK[Math.floor(Math.random()*BLANK.length)]}], function(){ renderHots() });
 }
 function talkTo(cid){
   var C=curCase();
