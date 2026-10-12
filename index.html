@@ -1212,7 +1212,7 @@ function renderHots(){
     d.style.width=w+'%';
     d.style.transform='rotate('+((h.rot!==undefined)?h.rot:(((i*37)%11)-5))+'deg)';
     var src = h.ev ? ('ev/'+h.ev+'.jpg') : ('img/'+(h.who||'v_wang')+'.jpg');
-    d.innerHTML='<img src="'+src+'" alt="" onerror="this.style.display='none";this.parentNode.classList.add('miss')">';
+    d.innerHTML='<img src="'+src+'" alt="">';
     d.onclick=function(e){ e.stopPropagation(); examine(h,i) };
     $('stage').appendChild(d);
   });
