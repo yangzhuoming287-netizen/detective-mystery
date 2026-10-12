@@ -32,6 +32,20 @@ html,body{margin:0;height:100%;background:#05080f;color:#eef2f8;overflow:hidden;
 .obj.miss{background:radial-gradient(circle,#ffd76e22,transparent 70%);border:1px dashed #ffd76e66;border-radius:9px;width:44px!important;height:44px}
 .obj:active{transform:scale(1.06)!important;filter:brightness(1.15) drop-shadow(0 6px 14px #000)}
 #stage{cursor:crosshair}
+#charStrip{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:9px;flex-wrap:wrap;z-index:12}
+.cchip{display:flex;align-items:center;gap:8px;background:#0a1120ee;border:1px solid #3c5178;border-radius:26px;padding:4px 14px 4px 4px;cursor:pointer;backdrop-filter:blur(3px)}
+.cchip img{width:42px;height:42px;border-radius:50%;object-fit:cover;object-position:top center;border:1px solid #5d7fb8}
+.cchip span{font-size:12.5px;color:#eaf2ff;white-space:nowrap}
+.cchip:hover{background:#243b63;border-color:#ffd76e}
+.cchip:active{transform:scale(.97)}
+#zoomLayer{position:absolute;inset:0;z-index:14;pointer-events:none}
+.zoomcard{position:absolute;width:132px;pointer-events:auto;cursor:pointer;transform:translate(-50%,-50%);background:#0a1120f2;border:2px solid #ffd76e;border-radius:10px;padding:4px;box-shadow:0 8px 26px #000c;animation:zpop .3s ease-out}
+@keyframes zpop{0%{transform:translate(-50%,-50%) scale(.6);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.zoomcard img{width:100%;border-radius:7px;display:block}
+.zoomcard span{display:block;font-size:11px;color:#ffe8a8;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zoomcard em{display:block;font-size:10px;color:#e0a94a;text-align:center;font-style:normal}
+.zone{z-index:7}
+#charL,#charR,#charC{z-index:9}
 /* 调查热点 */
 .hot{position:absolute;border-radius:50%;border:2px solid #ffd76e;background:#ffd76e33;
  display:flex;align-items:center;justify-content:center;font-size:11px;color:#ffe8a8;
@@ -1215,6 +1229,7 @@ function renderHots(){
     d.style.left=((h.x-w/200)*100)+'%';
     d.style.top=((h.y-w/200)*100)+'%';
     d.style.width=w+'%'; d.style.height=w+'%';
+    d.setAttribute('data-ev',h.ev||''); d.setAttribute('data-label',h.label||'');
     d.onclick=function(e){ e.stopPropagation(); examine(h,i) };
     $('stage').appendChild(d);
   });
@@ -1635,5 +1650,88 @@ function doCombo(a,b){
   };
   var _caseSolved=caseSolved;
   caseSolved=function(){ try{ var C=curCase(); react(C.court.statements[C.court.statements.length-1].who,'break') }catch(e){} return _caseSolved() };
+})();
+</script><script>
+/* ===================== 布局修正：人物条（不再挡住场景）+ 证物放大 ===================== */
+(function(){
+  /* 1) 人物：去掉占满画面的立绘方块，改为底部"人物条" */
+  function sweepBigPortraits(){
+    var st=$('stage'); if(!st) return;
+    Array.prototype.slice.call(st.children).forEach(function(el){
+      var bi=(el.style&&el.style.backgroundImage)||'';
+      if(bi.indexOf('img/v_')>=0 || bi.indexOf('/img/v_')>=0 || (el.className==='' && bi.indexOf('url(')>=0 && el.style.width==='30%')) el.remove();
+    });
+  }
+  function buildCharStrip(){
+    var s=curScene(); if(!s) return;
+    var old=document.getElementById('charStrip'); if(old) old.remove();
+    var list=(s.chars||[]); if(!list.length){ $('stage').dataset.chars='0'; return }
+    var bar=el('div'); bar.id='charStrip';
+    list.forEach(function(cid){
+      var c=charOf(cid);
+      var d=el('div','cchip');
+      d.setAttribute('data-who',cid);
+      d.innerHTML='<img src="img/'+(c.img||cid)+'.jpg" alt=""><span>'+c.name+'</span>';
+      d.onclick=function(e){ if(e&&e.stopPropagation) e.stopPropagation(); talkTo(cid) };
+      bar.appendChild(d);
+    });
+    $('stage').appendChild(bar);
+  }
+  function patchRenderScene(){
+    sweepBigPortraits();
+    buildCharStrip();
+    var cnt=$('objCount');
+    if(cnt){ var s=curScene(); if(s){ var tot=(s.hots||[]).length, got=0;
+      (s.hots||[]).forEach(function(h,i){ if(G.seen[G.scene+'_'+i]) got++ });
+      cnt.textContent='本场景已发现 '+got+' / '+tot+'　·　可问的人：'+((s.chars||[]).length); } }
+  }
+  var _renderScene=renderScene;
+  renderScene=function(){ _renderScene(); try{ patchRenderScene() }catch(e){} };
+  var _renderHots=renderHots;
+  renderHots=function(){ _renderHots(); try{ if(G.phase==='explore') buildCharStrip() }catch(e){} };
+  var _clearChars=clearChars;
+  clearChars=function(){ _clearChars(); var b=document.getElementById('charStrip'); if(b) b.remove() };
+
+  /* 2) 证物放大：按「仔细看」时，把画面里的证物放大弹出来看清楚 */
+  function zoomEvidence(){
+    var zs=document.querySelectorAll('.zone');
+    var layer=document.getElementById('zoomLayer');
+    if(layer) layer.remove();
+    layer=document.createElement('div'); layer.id='zoomLayer';
+    var n=0;
+    Array.prototype.forEach.call(zs,function(z,i){
+      var ev=z.getAttribute('data-ev'); if(!ev||!EVS[ev]) return;
+      var big=document.createElement('div'); big.className='zoomcard';
+      big.style.left=z.style.left; big.style.top=z.style.top;
+      big.innerHTML='<img src="ev/'+ev+'.jpg" alt=""><span>'+EVS[ev].name+'</span>'+
+        (EVS[ev].fake?'<em>来源存疑</em>':'');
+      big.onclick=function(e){ if(e&&e.stopPropagation) e.stopPropagation(); z.click() };
+      layer.appendChild(big); n++;
+    });
+    $('stage').appendChild(layer);
+    setTimeout(function(){ var l=document.getElementById('zoomLayer'); if(l) l.remove() },4200);
+    return n;
+  }
+  var _flash=flashZones;
+  flashZones=function(){ _flash(); try{ zoomEvidence() }catch(e){} };
+  var _look=lookAround;
+  lookAround=function(){
+    if(G.phase!=='explore'||DLG.lines.length){ return _look() }
+    var zs=document.querySelectorAll('.zone');
+    if(!zs.length){ runLines([{who:'det_shen',text:'（这间屋子看起来已经没有可查的东西了。）'}]); return }
+    return _look();
+  };
+  /* 3) 说话人立绘：缩小并靠边，别盖住场景 */
+  var _showChar=showChar;
+  showChar=function(id){
+    _showChar(id);
+    ['charL','charR','charC'].forEach(function(k){
+      var e=$(k); if(!e) return;
+      if(e.className.indexOf('on')>=0){
+        e.style.height='56%'; e.style.width='34%'; e.style[ (k==='charR')?'right':'left' ] = (k==='charR'?'0%':'0%');
+        e.style.bottom='64px';
+      }
+    });
+  };
 })();
 </script></body></html>
