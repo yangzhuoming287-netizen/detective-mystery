@@ -88,6 +88,7 @@ html,body{margin:0;height:100%;background:#05080f;color:#eef2f8;overflow:hidden;
 </style>
 </head>
 <body>
+<div id="title"></div>
 <div id="app">
   <div id="stage">
     <div id="sceneBg"></div>
@@ -399,6 +400,7 @@ var G={caseId:null, scene:null, ev:[], seen:{}, flags:{}, phase:'explore', talk:
 var DLG={lines:[], i:0, typing:false, timer:null, done:null, choices:null};
 function $(id){ return document.getElementById(id); }
 function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function ensure(id){ var e=$(id); if(!e){ e=document.createElement('div'); e.id=id; document.body.appendChild(e); } return e }
 function toast(t){ var e=$('toast'); e.textContent=t; e.className='on'; clearTimeout(e._t); e._t=setTimeout(function(){e.className=''},1800) }
 function saveLS(){ try{ localStorage.setItem('mystery_progress', JSON.stringify({unlocked:G.unlocked,done:G.done})) }catch(e){} }
 function loadLS(){ try{ var d=JSON.parse(localStorage.getItem('mystery_progress')||'{}'); if(d.unlocked) G.unlocked=d.unlocked; if(d.done) G.done=d.done }catch(e){} }
@@ -467,7 +469,7 @@ function startCase(cid){
   var C=caseOf(cid); if(!C) return;
   G.caseId=cid; G.phase='explore'; G.ev=[]; G.seen={}; G.flags={}; G.talk=null; G.log=[];
   G.penalty=3; G.court=null; G.scene=C.scenes[0].id;
-  $('title').classList.add('hide');
+  ensure('title').classList.add('hide');
   renderScene();
   runLines(C.intro, function(){ G.phase='explore'; renderAll() });
 }
@@ -640,6 +642,7 @@ function openModal(html, handler){
 function closeModal(){ $('modal').className='hide' }
 /* ---------- 标题 ---------- */
 function showTitle(){
+  ensure('title');
   var h='<h1>逆 证</h1><p>DETECTIVE MYSTERY · 现场调查 / 询问证人 / 法庭对决</p>';
   CASES.forEach(function(c,i){
     var lock=(i+1)>G.unlocked, done=G.done[c.id];
@@ -648,8 +651,8 @@ function showTitle(){
       '<b>'+c.title+'</b><small>'+c.sub+'</small></div>';
   });
   h+='<div style="color:#5f7096;font-size:11.5px;margin-top:6px">提示：先在场景里调查闪光点收集证物 → 询问在场人物 → 证物足够后「上法庭」→ 用证物击破证言</div>';
-  $('title').innerHTML=h; $('title').className='';
-  $('title').onclick=function(e){
+  ensure('title').innerHTML=h; ensure('title').className='';
+  ensure('title').onclick=function(e){
     var t=e.target.closest?e.target.closest('[data-case]'):null; if(!t) return;
     var cid=t.getAttribute('data-case'); if(!cid) return;
     startCase(cid);
@@ -672,12 +675,21 @@ function beep(f,dur,type,delay){
 }
 /* ---------- 启动 ---------- */
 function boot(){
+  try{
   loadLS();
   document.addEventListener('click', function(e){
     if(G.phase==='court') return;
     if(DLG.lines.length) advance();
   });
   showTitle();
+  }catch(err){ showFatal(err) }
+}
+function showFatal(err){
+  var d=document.createElement('div');
+  d.style.cssText='position:fixed;inset:0;background:#0a0f1a;color:#ffb0b0;padding:24px;font-size:13px;line-height:1.7;z-index:999;overflow:auto';
+  d.textContent='游戏启动出错：'+(err&&err.message||err)+'\n\n请把这行字截图发给开发者。';
+  document.body.appendChild(d);
+  try{ console.error(err) }catch(e){}
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 </script></body></html>
