@@ -26,6 +26,9 @@ html,body{margin:0;height:100%;background:#05080f;color:#eef2f8;overflow:hidden;
 /* 场景里的物件：不显示名称，玩家自己找 */
 .obj{position:absolute;cursor:zoom-in;z-index:7;transition:transform .12s,filter .12s;filter:drop-shadow(0 5px 10px #000b)}
 .obj img{width:100%;border-radius:9px;border:1px solid #ffffff33;display:block}
+.zone{position:absolute;cursor:zoom-in;z-index:7;border-radius:10px;background:transparent;transition:box-shadow .15s,background .15s}
+.zone:hover{box-shadow:0 0 0 2px #ffd76e99 inset;background:#ffd76e14}
+.zone:active{box-shadow:0 0 0 3px #ffd76e inset;background:#ffd76e22}
 .obj.miss{background:radial-gradient(circle,#ffd76e22,transparent 70%);border:1px dashed #ffd76e66;border-radius:9px;width:44px!important;height:44px}
 .obj:active{transform:scale(1.06)!important;filter:brightness(1.15) drop-shadow(0 6px 14px #000)}
 #stage{cursor:crosshair}
@@ -1187,7 +1190,8 @@ function bindStageSearch(){
 }
 function renderScene(){
   var s=curScene(); if(!s) return;
-  $('sceneBg').style.backgroundImage=bgOf(s.bg);
+  $('sceneBg').style.backgroundImage='url(scene2/'+G.caseId+'_'+s.id+'.jpg), url(scene/'+G.caseId+'_'+s.id+'_v2.jpg), url(img/'+s.bg+'.jpg), '+
+    'linear-gradient(180deg,'+charColor(s.bg)+',#0a0f1a)';
   $('locName').textContent=s.name;
   clearChars(); removeHots();
   (s.chars||[]).forEach(function(cid){
@@ -1205,14 +1209,12 @@ function renderHots(){
   var s=curScene(); if(!s||G.phase!=='explore') return;
   (s.hots||[]).forEach(function(h,i){
     if(G.seen[G.scene+'_'+i]) return;
-    // 道具直接摆在场景里：只画物品本身，不给名字、不给提示圈
-    var d=el('div','obj');
-    d.style.left=(h.x*100)+'%'; d.style.top=(h.y*100)+'%';
-    var w=(h.w||0.10)*100; if(w<7) w=7; if(w>12) w=12;
-    d.style.width=w+'%';
-    d.style.transform='rotate('+((h.rot!==undefined)?h.rot:(((i*37)%11)-5))+'deg)';
-    var src = h.ev ? ('ev/'+h.ev+'.jpg') : ('img/'+(h.who||'v_wang')+'.jpg');
-    d.innerHTML='<img src="'+src+'" alt="">';
+    // 物件已经画在场景图里，这里只放隐形命中区；鼠标移上去才有一圈极淡提示
+    var d=el('div','zone');
+    var w=(h.w||0.10)*100; if(w<6) w=6; if(w>13) w=13;
+    d.style.left=((h.x-w/200)*100)+'%';
+    d.style.top=((h.y-w/200)*100)+'%';
+    d.style.width=w+'%'; d.style.height=w+'%';
     d.onclick=function(e){ e.stopPropagation(); examine(h,i) };
     $('stage').appendChild(d);
   });
@@ -1296,7 +1298,9 @@ function presentTo(t,qi,evid){
 function startFinale(){
   var C=curCase(); if(!C.court){ toast('本案不需要对质'); return }
   G.phase='court'; G.court={ idx:0, pressed:{}, wrong:0 };
-  $('sceneBg').style.backgroundImage=bgOf(C.finaleBg||curScene().bg);
+  var _fb=(C.finaleBg||curScene().bg), _fsc=(C.finaleBg||curScene().id);
+  $('sceneBg').style.backgroundImage='url(scene2/'+C.id+'_'+_fsc+'.jpg), url(scene/'+C.id+'_'+_fsc+'_v2.jpg), url(img/'+_fb+'.jpg), '+
+    'linear-gradient(180deg,'+charColor(_fb)+',#0a0f1a)';
   $('locName').textContent='现场对质 · '+(C.culpritName||'凶手');
   clearChars(); removeHots(); renderHud(); renderCourt();
 }
