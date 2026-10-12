@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>逆证 · 侦探推理</title>
+<meta name="theme-color" content="#0a0f1a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%231b2438'/><circle cx='14' cy='13' r='6' fill='none' stroke='%23ffd76e' stroke-width='2.5'/><path d='M18 18l7 7' stroke='%23ffd76e' stroke-width='3'/></svg>">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#05080f;color:#eef2f8;overflow:hidden;
+ font-family:-apple-system,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;user-select:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+/* ---------- 场景区 ---------- */
+#stage{position:relative;flex:1;overflow:hidden;background:#0a0f1a}
+#sceneBg{position:absolute;inset:0;background-size:cover;background-position:center;
+ filter:brightness(.72) saturate(1.05);transition:background-image .3s}
+#charL,#charR{position:absolute;bottom:0;width:46%;height:88%;background-size:contain;
+ background-repeat:no-repeat;background-position:bottom center;transition:opacity .25s,transform .25s;opacity:0}
+#charL{left:-3%}#charR{right:-3%}
+#charL.on,#charR.on{opacity:1}
+#charC{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;height:92%;
+ background-size:contain;background-repeat:no-repeat;background-position:bottom center;opacity:0;transition:opacity .25s}
+#charC.on{opacity:1}
+#charR.small,#charL.small{height:70%;opacity:.85}
+/* 调查热点 */
+.hot{position:absolute;border-radius:50%;border:2px solid #ffd76e;background:#ffd76e33;
+ display:flex;align-items:center;justify-content:center;font-size:11px;color:#ffe8a8;
+ animation:pulse 1.6s infinite;cursor:pointer;z-index:6;text-align:center;line-height:1.15;padding:2px}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #ffd76e66}70%{box-shadow:0 0 0 14px #ffd76e00}100%{box-shadow:0 0 0 0 #ffd76e00}}
+/* ---------- 对话框 ---------- */
+#dlg{position:relative;flex:0 0 auto;min-height:34vh;max-height:46vh;background:linear-gradient(180deg,#141d33f2,#0a1120f8);
+ border-top:2px solid #3c5178;padding:12px 14px 62px;display:none}
+#dlg.on{display:block}
+#speaker{position:absolute;top:-16px;left:14px;background:#243b63;border:1px solid #5d7fb8;
+ color:#ffe8a8;font-size:13px;font-weight:700;padding:4px 14px;border-radius:6px;letter-spacing:1px}
+#dtext{font-size:15.5px;line-height:1.75;min-height:5.2em;white-space:pre-wrap}
+#dtext .cursor{display:inline-block;width:8px;background:#ffd76e;animation:blink .7s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+#dnext{position:absolute;right:14px;bottom:12px;font-size:12.5px;color:#9db0d0}
+#choices{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.choice{background:#1b2745;border:1px solid #3c5178;border-radius:8px;padding:9px 12px;font-size:14px;cursor:pointer}
+.choice:active{background:#2a3c66}
+/* ---------- 底栏按钮 ---------- */
+#hud{position:absolute;right:10px;top:10px;display:flex;gap:7px;z-index:20;flex-wrap:wrap;justify-content:flex-end}
+.hbtn{background:#141d33e6;border:1px solid #3c5178;color:#cfe0ff;border-radius:8px;padding:8px 12px;
+ font-size:12.5px;font-family:inherit;cursor:pointer;backdrop-filter:blur(3px)}
+.hbtn:active{background:#26375c}
+.hbtn.gold{border-color:#c9a227;color:#ffe8a8}
+.hbtn.red{border-color:#c05050;color:#ffd8d8}
+#hud2{position:absolute;left:10px;top:10px;z-index:20}
+#locName{background:#0a1120e6;border:1px solid #3c5178;border-radius:8px;padding:7px 12px;font-size:12.5px;color:#cfe0ff}
+/* ---------- 弹层 ---------- */
+#modal{position:fixed;inset:0;background:#000c;z-index:60;display:flex;align-items:center;justify-content:center;padding:14px}
+#mbox{background:#101a2e;border:1px solid #3c5178;border-radius:12px;max-width:520px;width:100%;max-height:84vh;overflow:auto;padding:14px}
+#mbox h3{margin:0 0 10px;font-size:15px;color:#ffe8a8}
+.evrow{display:flex;gap:10px;align-items:flex-start;background:#0b1425;border:1px solid #2a3c5e;border-radius:9px;padding:9px;margin-bottom:7px;cursor:pointer}
+.evrow:active{background:#16233c}
+.evrow .ic{width:38px;height:38px;border-radius:8px;background:#1b2745;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.evrow b{font-size:13.5px;color:#eaf2ff}
+.evrow small{display:block;color:#8fa4c8;font-size:11.5px;margin-top:3px;line-height:1.5}
+.btn{background:#243b63;color:#fff;border:1px solid #5d7fb8;border-radius:8px;padding:9px 16px;font-size:13.5px;font-family:inherit;cursor:pointer}
+.btn:active{transform:scale(.97)}
+.btn.g{background:#1a2740;color:#a9c0e8;border-color:#2f4468}
+.btn.y{background:#6b5313;color:#ffe8a8;border-color:#c9a227}
+/* ---------- 法庭 ---------- */
+#courtBar{position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;padding:9px 12px;background:#0a1120f0;border-top:2px solid #3c5178;z-index:22}
+#courtBar .btn{flex:1}
+#obj{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:70;opacity:0}
+#obj div{font-size:44px;font-weight:900;color:#ff3b3b;text-shadow:0 0 22px #ff0000,4px 4px 0 #fff;letter-spacing:4px;transform:scale(.6) rotate(-8deg)}
+#obj.on{opacity:1;animation:objin .55s ease-out}
+@keyframes objin{0%{opacity:0;transform:scale(2.4)}30%{opacity:1;transform:scale(1)}100%{opacity:1;transform:scale(1)}}
+/* ---------- 标题/菜单 ---------- */
+#title{position:fixed;inset:0;background:radial-gradient(circle at 50% 30%,#1b2745,#05080f 70%);z-index:80;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px}
+#title h1{margin:0;font-size:34px;letter-spacing:8px;color:#fff;text-shadow:0 0 24px #ffd76e66}
+#title p{margin:0;color:#8fa4c8;font-size:13px;letter-spacing:2px}
+.caseCard{background:#101a2e;border:1px solid #3c5178;border-radius:10px;padding:12px;width:100%;max-width:460px;cursor:pointer}
+.caseCard:active{background:#16233c}
+.caseCard b{font-size:15px;color:#ffe8a8}
+.caseCard small{display:block;color:#8fa4c8;font-size:12px;margin-top:4px;line-height:1.55}
+.caseCard .tag{float:right;font-size:11px;padding:2px 8px;border-radius:10px;background:#243b63;color:#cfe0ff}
+.caseCard.lock{opacity:.45}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#101a2eee;border:1px solid #5d7fb8;
+ color:#eaf2ff;padding:9px 16px;border-radius:20px;font-size:13px;z-index:90;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.on{opacity:1}
+.hide{display:none !important}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="sceneBg"></div>
+    <div id="charL"></div><div id="charR"></div><div id="charC"></div>
+    <div id="hud2"><div id="locName">—</div></div>
+    <div id="hud"></div>
+    <div id="courtBar" class="hide"></div>
+  </div>
+  <div id="dlg"><div id="speaker"></div><div id="dtext"></div><div id="choices"></div><div id="dnext">点击继续 ▸</div></div>
+</div>
+<div id="modal" class="hide"><div id="mbox"></div></div>
+<div id="obj"><div>异 议 あ り ！</div></div>
+<div id="toast"></div>
+<script>
+/* ===================== 人物 / 证物 / 案件 ===================== */
+var CHARS={
+ det_shen:{name:'沈默',img:'det_shen',side:'L'},
+ ast_xiaoman:{name:'林小满',img:'ast_xiaoman',side:'R'},
+ cop_zhou:{name:'周警官',img:'cop_zhou',side:'R'},
+ pros_yan:{name:'严明检察官',img:'pros_yan',side:'R'},
+ judge_chen:{name:'陈正法官',img:'judge_chen',side:'C'},
+ v_wang:{name:'王守仁教授',img:'v_wang',side:'R'},
+ v_wanglady:{name:'王夫人',img:'v_wanglady',side:'L',x:58},
+ v_liwei:{name:'研究生李维',img:'v_liwei',side:'R',x:60},
+ v_wubo:{name:'管家吴伯',img:'v_wubo',side:'R',x:56},
+ v_zhao:{name:'馆长赵世昌',img:'v_zhao',side:'R'},
+ v_suwan:{name:'修复师苏婉',img:'v_suwan',side:'L',x:56},
+ v_zheng:{name:'保安郑强',img:'v_zheng',side:'R',x:58},
+ v_gu:{name:'收藏家古先生',img:'v_gu',side:'L',x:54},
+ v_nakamura:{name:'建筑师中村',img:'v_nakamura',side:'R'},
+ v_fujiwara:{name:'藤原小姐',img:'v_fujiwara',side:'L',x:56},
+ v_tanabe:{name:'秘书田边',img:'v_tanabe',side:'R',x:58},
+ v_takagi:{name:'高木医生',img:'v_takagi',side:'R',x:56},
+ v_lin:{name:'码头工人林海',img:'v_lin',side:'R',x:58},
+ v_mei:{name:'梅姐',img:'v_mei',side:'R'},
+ v_kid:{name:'少年小凯',img:'v_kid',side:'R',x:58}
+};
+var EVS={
+ fc_rep:{name:'法医报告',icon:'📋',desc:'死亡时间：21:00 — 22:00，死因：颈部受压窒息，体内检出镇静药物。'},
+ lock:{name:'门栓与门锁',icon:'🔒',desc:'书房门是老式木门栓，从内侧插上。门缝下沿有极细的磨痕。'},
+ letter:{name:'未寄出的信',icon:'✉️',desc:'写给校方的检举信，指控某人的论文存在严重抄袭。写到一半就断了。'},
+ ash:{name:'壁炉灰烬',icon:'🔥',desc:'灰烬中混有细金属丝残渣，像是被烧过的线绳或钢琴线。'},
+ tea:{name:'半杯热茶',icon:'🍵',desc:'茶杯仍是温的。管家说这杯茶是他 21:50 之后泡的——而那时教授已死。'},
+ print:{name:'窗台脚印',icon:'👣',desc:'窗台上有一枚鞋印，尺码 37，鞋底纹路属于女式软底鞋。'},
+ uv:{name:'紫外线灯',icon:'🔦',desc:'修复室的专业紫外线灯，灯管上沾着一小片蓝色颜料。'},
+ paint:{name:'颜料成分报告',icon:'🧪',desc:'《春江》赝品使用了 1950 年后才量产的钛白，真迹应为锌白。'},
+ cam:{name:'监控时间戳',icon:'📹',desc:'画库监控在 22:14—22:17 出现 3 分钟空白，其余时间完整。'},
+ diary:{name:'修复师日记',icon:'📔',desc:'“他又拿赝品来糊弄人了。9 月 12 日，我拒绝在鉴定书上签字。”'},
+ ledger:{name:'藏品清册',icon:'📚',desc:'《春江》真迹于三个月前被"借展"到外地，借展方签名：古。'},
+ glass:{name:'馆长咖啡杯',icon:'☕',desc:'杯底残留物检出高浓度乙二醇（防冻剂主成分），杯口只有馆长的指纹。'},
+ gear:{name:'卡住的齿轮',icon:'⚙️',desc:'钟楼齿轮间夹着一小段深灰色羊毛纤维，齿轮缝有干涸血迹。'},
+ blueprint:{name:'钟楼蓝图',icon:'📐',desc:'蓝图角落有一条未标注的窄通道，从二楼书库通向钟楼机芯层。'},
+ key:{name:'备用钥匙',icon:'🗝️',desc:'钟楼钥匙一把，上面只有死者的指纹，但钥匙齿上有一道新划痕。'},
+ rec:{name:'录音笔',icon:'🎙️',desc:'死者随身录音笔，最后一段录于 3:47，背景是钟声。'},
+ shoe:{name:'走廊鞋印',icon:'👟',desc:'书库地板上的鞋印，44 码男鞋，鞋跟内侧磨损严重。'},
+ cups:{name:'两只咖啡杯',icon:'☕',desc:'一只杯沿有口红，另一只没有。两杯都是美式，都没喝完。'},
+ dna:{name:'DNA 报告',icon:'🧬',desc:'死者与"梅姐"登记的户籍资料存在 0.2% 差异——不是同一个人，但高度相似。'},
+ photo:{name:'旧照片',icon:'🖼️',desc:'二十年前的合影：两个长得一模一样的女孩，一个戴手表在左腕，一个在右腕。'},
+ cam2:{name:'店内监控',icon:'📹',desc:'22:30 有人进入后厨，身形瘦小，穿深色外套，未露正脸。'},
+ will:{name:'遗嘱副本',icon:'📜',desc:'梅姐的遗嘱把店铺留给"妹妹"，而她的户籍上是独生女。'},
+ watch:{name:'遗物手表',icon:'⌚',desc:'死者戴在右手腕。目击者却一致说“她一直左手戴表”。'}
+};
+/* ===================== 案件 ===================== */
+var CASES=[
+/* ---------------- 案件一：教学 ---------------- */
+{
+ id:'c1', title:'书房里的沉默', sub:'大学教授死于反锁的书房，门从内侧插上——密室？', diff:'教学',
+ brief:'历史系王守仁教授被发现死于自家书房。门从内侧插上木栓，窗户锁死，房间内只有死者。初步判定为密室。<br><br>关键人物：王夫人（遗产继承人）、研究生李维（被指抄袭）、管家吴伯（第一发现人）。',
+ intro:[{who:'ast_xiaoman',text:'沈老师，警局那边说这案子已经准备按"意外"结了……可我不信。'},
+   {who:'det_shen',text:'一间从里面插上的房间，一杯还温着的茶。走，先去看看现场。'},
+   {who:null,text:'【玩法】点击场景里闪烁的金圈进行调查，收集证物；点击人物可以询问；证物足够后点右上角「上法庭」，用证物击破证言。'}],
+ scenes:[
+  {id:'sc_study',name:'教授书房',bg:'sc_study',hots:[
+    {x:.30,y:.55,w:.16,h:.20,label:'书桌',look:'桌上摊着写到一半的检举信，钢笔已经干了。信里提到"某某的论文存在严重抄袭"，但没写名字。',ev:'letter'},
+    {x:.62,y:.62,w:.16,h:.20,label:'壁炉',look:'壁炉里烧过东西。灰烬中混着极细的金属丝残渣——像是被烧掉的线绳。',ev:'ash'},
+    {x:.78,y:.52,w:.14,h:.16,label:'茶几',look:'半杯茶还是温的。管家说这杯是他 21:50 之后泡的，可教授那时已经死了。',ev:'tea'},
+    {x:.10,y:.42,w:.14,h:.16,label:'木门',look:'老式门栓，从内侧插上。门缝下沿有一道很细的横向磨痕，反复摩擦出来的。',ev:'lock'},
+    {x:.44,y:.36,w:.12,h:.14,label:'窗台',look:'窗台上有一枚很浅的鞋印，37 码，女式软底鞋。',ev:'print'}],
+   chars:['v_wanglady','v_liwei']},
+  {id:'sc_hall',name:'宅邸大厅',bg:'sc_hall',hots:[
+    {x:.24,y:.60,w:.16,h:.18,label:'楼梯扶手',look:'扶手上有一处新鲜的刮痕，像是被什么硬物磕过。'},
+    {x:.66,y:.58,w:.18,h:.20,label:'鞋柜',look:'门口鞋柜里有一双女式软底鞋，鞋底纹路和窗台那枚鞋印完全一致——37 码。',ev:'print',flag:'shoe_seen'}],
+   chars:['v_wubo']},
+  {id:'sc_garden',name:'庭院',bg:'sc_garden',hots:[
+    {x:.30,y:.66,w:.18,h:.18,label:'花坛',look:'花坛泥土里插着一根烧了一半的细绳，另一端被烧断了。',ev:'ash'},
+    {x:.70,y:.60,w:.16,h:.16,label:'石灯笼',look:'石灯笼下有半包烟，是管家吴伯的牌子。'}],
+   chars:[]}
+ ],
+ talks:[
+  {id:'v_wanglady',greet:'……警官先生，我很累。请快一点。',questions:[
+    {q:'案发时你在哪里？',a:[{t:'21:30 到 22:00 我一直在一楼客厅看书，没上过楼。家里的佣人都能证明。'},
+      {t:'我和守仁最近是有些争执，为了钱。但我不可能杀他。'}],
+     present:[{ev:'tea',lines:[{who:'det_shen',text:'夫人。这杯茶，管家是在 21:50 之后泡的。'},{who:'det_shen',text:'而法医说，教授在 22:00 之前就已死亡。'},
+       {who:'v_wanglady',text:'……那、那又怎样？'},{who:'det_shen',text:'那时能进书房、还让人泡茶的人，只有你。'}],flag:'lady_tea'},
+      {ev:'print',lines:[{who:'det_shen',text:'窗台上有 37 码女式软底鞋的鞋印。您穿多大鞋？'},{who:'v_wanglady',text:'……'}],flag:'lady_print'}],
+     wrong:'这和我有什么关系？'},
+    {q:'你和教授为什么争执？',a:[{t:'他要把一半财产捐给学校。我不同意。就这样。'}]},
+    {q:'门是从里面插上的，你怎么解释？',a:[{t:'我不知道！也许是守仁自己插的门栓——他一直有反锁门的习惯。'}]}
+  ]},
+  {id:'v_liwei',greet:'老师……老师怎么会……',questions:[
+    {q:'案发时你在做什么？',a:[{t:'我在学校图书馆赶论文，一直到十一点。有借阅记录能证明。'}]},
+    {q:'教授的检举信是写给谁的？',a:[{t:'检举信？……我不知道什么检举信。',ev:'letter'},{t:'（他脸色发白，手在抖。）'}]}
+  ]},
+  {id:'v_wubo',greet:'先生，有什么需要我做的吗？',questions:[
+    {q:'你是怎么发现遗体的？',a:[{t:'22:20 我送夜宵上楼，敲门没人应。门是从里面插着的，我喊了几声就撞开了。'}]},
+    {q:'教授有什么习惯？',a:[{t:'先生晚上写东西一定要锁门，门栓从里面插上。……不过窗台那扇窗，其实插销是坏的，从外面能推开。',flag:'window_broken'},
+      {t:'还有，夫人手上有书房的备用钥匙。'}]},
+    {q:'这杯茶是你泡的？',a:[{t:'是。21:50 左右我泡了一杯送上去，敲门没人应，我就放在门口的小几上了。'}]}
+  ]}
+ ],
+ court:{ statements:[
+   {who:'v_wanglady',text:'21:30 到 22:00 我一直在一楼客厅看书，从没上过楼。',press:'（她重复了三次，语气一次比一次快。）',
+    ev:'tea',break_:'你说你在一楼——可这杯茶是 21:50 之后泡的，而那时教授已经死了。',
+    lines:[{who:'v_wanglady',text:'……是、是佣人泡的！'},{who:'det_shen',text:'管家说，他只泡过一杯，而且是端到二楼书房门口。'},{who:'v_wanglady',text:'（沉默。）'}]},
+   {who:'v_wanglady',text:'就算我上楼，门也是从里面插上的，我进不去。',press:'（她的手指绞在一起。）',
+    ev:'lock',break_:'门缝下沿的磨痕，就是从外面拉门栓留下的。',
+    lines:[{who:'det_shen',text:'您在门外把细线穿过门缝、套住门栓，拉上之后再把线抽走——所以线绳被丢进壁炉烧掉了。'},
+      {who:'det_shen',text:'壁炉灰里的金属丝残渣，就是证据。'},{who:'v_wanglady',text:'……啊啊啊！'}]},
+   {who:'v_wanglady',text:'我没有杀人！他体内的药和我无关！',press:'（她开始发抖。）',
+    ev:'letter',break_:'这封写到一半的检举信是你烧的——但你只烧了一半。',
+    lines:[{who:'det_shen',text:'你进书房是为了销毁这封信。你们争执，你把镇静药下在他的茶里，然后在他昏睡时……'},
+      {who:'judge_chen',text:'本庭宣判：王夫人，杀人罪名成立。'}]}
+ ]},
+ ending:[{who:'ast_xiaoman',text:'密室……原来是假的。'},
+   {who:'det_shen',text:'越是像密室的房间，越要问一句：门栓是谁插上的。'}],
+ truth:'密室是伪造的。王夫人用备用钥匙进入书房，争执中在茶里下了镇静药，待教授昏睡后行凶。随后她把细线穿过门缝套住门栓，从门外拉上，再把线抽走丢进壁炉烧掉——所以灰烬里留下了金属丝残渣。窗台的鞋印与鞋柜里的软底鞋尺码完全吻合。'
+},
+/* ---------------- 案件二：简单 ---------------- */
+{
+ id:'c2', title:'赝品', sub:'美术馆长倒在修复室，名画被调包，监控只黑了 3 分钟', diff:'简单',
+ brief:'市美术馆馆长赵世昌被发现死于修复室，桌上一杯咖啡喝了一半。同期，馆藏名画《春江》被鉴定为赝品。<br><br>关键人物：修复师苏婉、保安郑强、收藏家古先生。',
+ intro:[{who:'cop_zhou',text:'沈顾问，这次不一般。馆长死了，画也是假的。'},{who:'det_shen',text:'画是假的，人却是真的死了。先看现场。'}],
+ scenes:[
+  {id:'sc_restore',name:'修复室',bg:'sc_restore',hots:[
+    {x:.28,y:.56,w:.16,h:.20,label:'咖啡杯',look:'杯底有白色残留。馆长只喝了三分之一。',ev:'glass'},
+    {x:.62,y:.42,w:.14,h:.18,label:'紫外线灯',look:'灯管上沾着一小片蓝色颜料，和赝品上那层新颜料完全一致。',ev:'uv'},
+    {x:.80,y:.60,w:.16,h:.18,label:'工作台',look:'抽屉里有一本日记，最后一页写着"他又拿赝品来糊弄人了"。',ev:'diary'}],
+   chars:['v_suwan']},
+  {id:'sc_gallery',name:'展厅',bg:'sc_gallery',hots:[
+    {x:.22,y:.40,w:.16,h:.22,label:'《春江》',look:'画上盖着"1950 年后量产"的钛白颜料，真迹应当是锌白。',ev:'paint'},
+    {x:.58,y:.36,w:.14,h:.16,label:'监控探头',look:'探头正对画库入口，记录在 22:14—22:17 断了 3 分钟。',ev:'cam'},
+    {x:.80,y:.58,w:.16,h:.18,label:'接待台',look:'藏品清册写着《春江》真迹三个月前被"借展"，借展方签名只有一个字：古。',ev:'ledger'}],
+   chars:['v_gu']},
+  {id:'sc_police',name:'警局办公室',bg:'sc_police',hots:[
+    {x:.30,y:.56,w:.16,h:.18,label:'物证箱',look:'保安的手电筒，镜片上有新鲜刮痕。',ev:'uv'}],
+   chars:['cop_zhou','v_zheng']}
+ ],
+ talks:[
+  {id:'v_suwan',greet:'……你们终于来了。我等了很久。',questions:[
+    {q:'你和馆长有什么矛盾？',a:[{t:'他逼我在赝品的鉴定书上签字。我拒绝了。这是职业底线。',ev:'diary'}]},
+    {q:'案发时你在哪？',a:[{t:'在展厅布光。整个 22 点前后，我都在射灯下面，至少有三个观众能看见我。'}]},
+    {q:'谁最可能调包？',a:[{t:'调包要进画库，画库钥匙只有三把：馆长、我、还有保安郑强。但是……',flag:'key3'},
+      {t:'郑强说他今晚没进过画库，因为监控"停电了"。'}]}
+  ]},
+  {id:'v_zheng',greet:'我、我真的什么都不知道！',questions:[
+    {q:'22 点你在哪？',a:[{t:'我在画库门口值班啊。那会儿监控停电了，我一直在门口守着，谁也没进去。'}]},
+    {q:'监控真的停电了吗？',a:[{t:'是啊，黑了很久！'}]}
+  ]},
+  {id:'v_gu',greet:'年轻人，古董这东西，讲究一个缘分。',questions:[
+    {q:'你为什么借走真迹？',a:[{t:'借展而已，手续齐全。怎么，怀疑我？'}]},
+    {q:'你和保安郑强认识吗？',a:[{t:'……不认识。（他答得太快了。）'}]}
+  ]},
+  {id:'cop_zhou',greet:'尸检报告出来了，你猜怎么着。',questions:[
+    {q:'死因是什么？',a:[{t:'乙二醇中毒。就是防冻剂那玩意儿。而且啊——',flag:'cause'},
+      {t:'咖啡杯上只有馆长自己的指纹。也就是说，下毒的人没碰杯子。'}]}
+  ]}
+ ],
+ court:{ statements:[
+   {who:'v_zheng',text:'22:14 到 22:17 监控停电了，那三分钟谁也没法进画库。',press:'（他反复强调"停电"这两个字。）',
+    ev:'cam',break_:'停电只有 3 分钟——而调换一幅画、还要布置现场，至少需要十五分钟。',
+    lines:[{who:'det_shen',text:'这 3 分钟不是"停电"，是有人手动关掉了探头。而且——'},{who:'det_shen',text:'真迹早在三个月前就被借走了。你调包的不是今晚，是很久以前。'}]},
+   {who:'v_zheng',text:'我一直在门口守着，馆长死的时候我不可能在场。',press:'（他的目光一直往地上看。）',
+    ev:'uv',break_:'手电镜片上的新刮痕和紫外线灯上那片蓝颜料，说明你去过修复室。',
+    lines:[{who:'v_zheng',text:'我、我只是进去借个灯……'}]},
+   {who:'v_zheng',text:'就算我进去过，我也没杀他！我连毒药都没有！',press:'（他开始冒汗。）',
+    ev:'glass',break_:'修复室的溶剂柜里就有乙二醇，而钥匙只有你和馆长有。',
+    lines:[{who:'det_shen',text:'古先生承诺给你一笔钱，让你把真迹换出来。馆长发现了，你就把溶剂倒进了他的咖啡。'},
+      {who:'v_zheng',text:'……是他先说要报警的。'}]},
+   {who:'v_zheng',text:'是古先生指使我的！真迹在他手上！',press:'（他终于崩溃了。）',
+    ev:'ledger',break_:'借展方签名只有一个"古"字——这从一开始就是他和你的计划。',
+    lines:[{who:'judge_chen',text:'本庭宣判：郑强、古某，共同犯罪成立。'}]}
+ ]},
+ ending:[{who:'ast_xiaoman',text:'三个月前就调包了……所以今晚馆长发现的不是"赝品"，是"真相"。'},
+   {who:'det_shen',text:'画可以造假，但时间是造不了假的。'}],
+ truth:'收藏家古先生三个月前以"借展"为名取走真迹，并指使保安郑强在画库完成调包。馆长赵世昌在修复时发现颜料年代不符，准备报警。郑强从修复室的溶剂柜取出乙二醇，倒入馆长的咖啡。为掩盖行踪，他手动关闭监控三分钟——恰好成为最大的破绽。'
+},
+/* ---------------- 案件三：中等 ---------------- */
+{
+ id:'c3', title:'钟楼', sub:'密室、停摆的齿轮、3 点 47 分的钟声', diff:'中等',
+ brief:'建筑师中村在自己的钟楼里死亡。钟楼唯一的门从内侧反锁，机芯齿轮停在 3:47，齿轮间有干涸血迹。<br><br>关键人物：秘书田边、藤原家大小姐、私人医生高木。<br><b>提示：注意建筑本身。</b>',
+ intro:[{who:'cop_zhou',text:'又是密室。这次连钥匙都在死者口袋里。'},{who:'det_shen',text:'建筑师的房子，不能只用眼睛看。'}],
+ scenes:[
+  {id:'sc_tower',name:'钟楼内部',bg:'sc_tower',hots:[
+    {x:.30,y:.44,w:.16,h:.20,label:'齿轮组',look:'齿轮缝里夹着一小段深灰色羊毛纤维，还有干涸的血迹。',ev:'gear'},
+    {x:.66,y:.60,w:.16,h:.18,label:'死者口袋',look:'钟楼钥匙，只有死者的指纹。但钥匙齿上有一道很新的划痕。',ev:'key'},
+    {x:.46,y:.66,w:.14,h:.16,label:'录音笔',look:'最后一段录音在 3:47，背景是钟声——而且隐约有人说话。',ev:'rec'}],
+   chars:['v_takagi']},
+  {id:'sc_hall',name:'宅邸大厅',bg:'sc_hall',hots:[
+    {x:.30,y:.56,w:.16,h:.18,label:'宴会厅入口',look:'宴会厅的酒杯几乎没动过，管家说 3:40 起就没人再倒酒。',ev:'glass'},
+    {x:.68,y:.54,w:.18,h:.20,label:'书库',look:'书库地板上有 44 码男鞋鞋印，鞋跟内侧磨损严重。这个房间本该没人进来。',ev:'shoe'}],
+   chars:['v_fujiwara','v_tanabe']},
+  {id:'sc_garden',name:'庭院',bg:'sc_garden',hots:[
+    {x:.34,y:.62,w:.18,h:.18,label:'工具棚',look:'棚里少了一把维修用的长梯，靠在钟楼外侧墙上。',ev:'blueprint'}],
+   chars:[]}
+ ],
+ talks:[
+  {id:'v_tanabe',greet:'沈先生，请节哀……不，我是说，请尽快查明真相。',questions:[
+    {q:'3:47 你在哪里？',a:[{t:'在宴会厅敬酒。藤原小姐可以作证，我们一直在一起。'}]},
+    {q:'你穿过这双鞋吗？',a:[{t:'44 码？我穿 42。',flag:'shoe_deny'}]},
+    {q:'钟楼的蓝图在哪？',a:[{t:'蓝图一直是中村先生自己保管的。……不过，我在他书房见过一次。',ev:'blueprint'}]}
+  ]},
+  {id:'v_fujiwara',greet:'我没什么好说的。',questions:[
+    {q:'3:40 之后你在做什么？',a:[{t:'在宴会厅。田边秘书一直在我旁边，直到钟声响。',flag:'alibi_tanabe'},
+      {t:'……不过钟响的时候，他好像离开过一会儿。'}]},
+    {q:'中村先生最近有什么异常？',a:[{t:'他说有人动过他的蓝图。还在钟楼里加了一道锁。'}]}
+  ]},
+  {id:'v_takagi',greet:'死亡时间是准确的，我确定。',questions:[
+    {q:'死因和死亡时间？',a:[{t:'后脑钝器伤，当场死亡。时间在 3:40 到 3:50 之间。'},{t:'那段时间钟声正好响过，掩盖了一切声音。'}]},
+    {q:'钟楼只有一扇门吗？',a:[{t:'图纸上是的。……但中村先生这种建筑师，你永远该多问一句。',ev:'blueprint'}]}
+  ]}
+ ],
+ court:{ statements:[
+   {who:'v_tanabe',text:'3:47 我人在宴会厅敬酒，藤原小姐一直在我身边。',press:'（他笑得很得体。）',
+    ev:'glass',break_:'宴会厅的酒从 3:40 起就没人动过——你在那里"敬酒"了二十分钟？',
+    lines:[{who:'v_tanabe',text:'那只是……大家没心情喝。'},{who:'det_shen',text:'还是说，那时你根本不在宴会厅。'}]},
+   {who:'v_tanabe',text:'钟楼只有一扇门，还从里面反锁，我进不去。',press:'（他摊了摊手。）',
+    ev:'blueprint',break_:'蓝图上有一条未标注的窄通道，从二楼书库直通钟楼机芯层。',
+    lines:[{who:'v_tanabe',text:'……那条通道连中村先生自己都封了！'},{who:'det_shen',text:'封了，但没砌上。书库地板上的 44 码鞋印就是你留下的。'}]},
+   {who:'v_tanabe',text:'我穿 42 码，鞋印不是我的。',press:'（他下意识缩了一下脚。）',
+    ev:'shoe',break_:'鞋跟内侧磨损严重——那是你长期左脚先着地的走路习惯。',
+    lines:[{who:'v_tanabe',text:'……'}]},
+   {who:'v_tanabe',text:'录音笔里只有钟声，那能证明什么？',press:'（他的声音开始发紧。）',
+    ev:'rec',break_:'录音里除了钟声，还有你的声音。而那时你应该在宴会厅。',
+    lines:[{who:'det_shen',text:'3:47，钟声、你的声音、齿轮卡住的声音，全在同一段录音里。'},
+      {who:'det_shen',text:'你用长梯从外侧爬上机芯层，行凶后把钥匙塞回死者口袋——钥匙齿上的新划痕就是这么来的。'}]},
+   {who:'v_tanabe',text:'证据……你根本没有决定性证据。',press:'（他终于不笑了。）',
+    ev:'gear',break_:'齿轮间夹着的深灰羊毛纤维，和你的西装面料完全一致。',
+    lines:[{who:'judge_chen',text:'本庭宣判：田边，杀人罪名成立。'}]}
+ ]},
+ ending:[{who:'ast_xiaoman',text:'书库……我怎么也没想到墙里还有一条路。'},
+   {who:'det_shen',text:'建筑师的房子会骗人。所以要先读图纸，再读人心。'}],
+ truth:'钟楼的"密室"是伪造的。蓝图上有一条未标注的窄通道，从二楼书库通往机芯层。秘书田边事先从书房看到蓝图，案发当晚用长梯外侧攀入钟楼，3:47 趁钟声掩盖行凶，随后从通道离开，并把钥匙塞回死者口袋。齿轮间的深灰羊毛纤维与鞋印的磨损特征成为决定性证据。'
+},
+/* ---------------- 案件四：困难 ---------------- */
+{
+ id:'c4', title:'替身', sub:'两个目击者，两种描述——死者到底是谁？', diff:'困难',
+ brief:'咖啡店老板娘"梅姐"在后厨被杀。两名目击者对当晚她的衣着描述完全相反：一个说她穿米色风衣，一个说她穿深色外套；一个说她左手戴表，一个说右手戴表。<br><br>关键人物：少年小凯、码头工人林海、私人医生高木。<br><b>提示：矛盾的证词，未必有一个人在撒谎。</b>',
+ intro:[{who:'ast_xiaoman',text:'沈老师，两个目击者吵起来了，都说自己没看错。'},{who:'det_shen',text:'如果两个人都是诚实的，那问题就不在证词上——在"她"身上。'}],
+ scenes:[
+  {id:'sc_dining',name:'咖啡店（案发夜）',bg:'sc_dining',hots:[
+    {x:.26,y:.58,w:.16,h:.18,label:'两只咖啡杯',look:'一只杯沿有口红，另一只没有。两杯都是美式，都没喝完。',ev:'cups'},
+    {x:.62,y:.56,w:.16,h:.18,label:'遗物手表',look:'死者戴在右手腕。但所有老邻居都说"梅姐一直左手戴表"。',ev:'watch'},
+    {x:.80,y:.40,w:.14,h:.16,label:'店内监控',look:'22:30 有人进入后厨，身形瘦小，深色外套，没露正脸。',ev:'cam2'}],
+   chars:['v_kid']},
+  {id:'sc_office',name:'梅姐的公寓',bg:'sc_office',hots:[
+    {x:.30,y:.52,w:.16,h:.18,label:'旧相册',look:'二十年前的合影：两个一模一样的女孩，一个手表在左腕，一个在右腕。',ev:'photo'},
+    {x:.66,y:.58,w:.16,h:.18,label:'抽屉',look:'一份遗嘱副本：店铺留给"妹妹"。可户籍上，梅姐是独生女。',ev:'will'}],
+   chars:['v_lin']},
+  {id:'sc_morgue',name:'停尸房',bg:'sc_morgue',hots:[
+    {x:.34,y:.54,w:.18,h:.20,label:'尸检台',look:'DNA 比对：死者与"梅姐"的户籍资料有 0.2% 差异——不是同一个人，但高度相似。',ev:'dna'}],
+   chars:['v_takagi']}
+ ],
+ talks:[
+  {id:'v_kid',greet:'我真的看见了！她穿的是深色外套！',questions:[
+    {q:'你看到的是什么时间？',a:[{t:'22:20 左右，我从店门口过，看见她从后厨出来，走得很急。'}]},
+    {q:'她戴表了吗？',a:[{t:'戴了，在右手！我记得很清楚，因为我当时还觉得奇怪。'}]},
+    {q:'你认识梅姐多久了？',a:[{t:'我从小学就在她店里写作业。她左手戴表，二十年的习惯了。',flag:'kid_knows'},
+      {t:'不过……那晚她的手一直在抖。'}],present:[
+      {ev:'watch',lines:[{who:'det_shen',text:'如果她左手戴了二十年表，为什么遗物上的表在右手？'},{who:'v_kid',text:'……啊。'}]},
+      {ev:'photo',lines:[{who:'det_shen',text:'二十年前的照片上，是两个人。'},{who:'v_kid',text:'梅姐……有个姐姐？'}]}]}
+  ]},
+  {id:'v_lin',greet:'警察同志，我跟梅姐认识十五年了。',questions:[
+    {q:'你今晚见到她了吗？',a:[{t:'见到了！22 点左右，她穿米色风衣在门口抽烟。我还跟她打了招呼。'}]},
+    {q:'她有什么异常？',a:[{t:'她问我"今天几号"，问了两遍。以前从没这样过。',flag:'lin_date'}]},
+    {q:'她戴表吗？',a:[{t:'左手啊。她一直左手戴表。'}]}
+  ]},
+  {id:'v_takagi',greet:'DNA 结果出来了。这个结论相当罕见。',questions:[
+    {q:'DNA 说明了什么？',a:[{t:'死者与户籍上的"梅姐"不是同一个人——但相似度极高。只有一种可能。',ev:'dna'}]},
+    {q:'什么可能？',a:[{t:'同卵双胞胎。两个人的 DNA 几乎一致，但不是同一人。'}]}
+  ]}
+ ],
+ court:{ statements:[
+   {who:'v_kid',text:'那晚她穿深色外套，右手戴表，一定不是梅姐本人！',press:'（少年咬着嘴唇。）',
+    ev:'photo',break_:'你看到的是"妹妹"，而另一位目击者看到的是"姐姐"。',
+    lines:[{who:'det_shen',text:'二十年前的合影上是两个女孩——一个左腕戴表，一个右腕戴表。'},{who:'det_shen',text:'梅姐是姐姐，一直左手戴表。死者是右手戴表的妹妹。'}]},
+   {who:'v_lin',text:'我 22 点还跟梅姐在门口说过话，她穿米色风衣。',press:'（他搓着手，很肯定。）',
+    ev:'cups',break_:'两杯咖啡，一只杯沿有口红、一只没有——那晚店里有两位"梅姐"。',
+    lines:[{who:'det_shen',text:'你见到的是姐姐。而十分钟后，进后厨的是妹妹。'}]},
+   {who:'v_lin',text:'她问我"今天几号"，问了两遍。我以为是累了。',press:'（他叹了口气。）',
+    ev:'will',break_:'遗嘱把店铺留给"妹妹"，可户籍上梅姐是独生女——这份遗嘱是伪造的身份安排。',
+    lines:[{who:'det_shen',text:'妹妹想用姐姐的身份活下去。而姐姐发现了这件事。'}]},
+   {who:'v_kid',text:'可是监控拍到的人是深色外套，身形瘦小，绝不是梅姐！',press:'（少年急切地看向屏幕。）',
+    ev:'cam2',break_:'监控里的身形瘦小、深色外套——那正是死者的女儿，或者说是"妹妹"的女儿。',
+    lines:[{who:'det_shen',text:'不。监控里的人是姐姐。她穿深色外套，是为了让人以为那是别人。'},{who:'det_shen',text:'她进后厨，是为了拿回属于自己的身份证件。'}]},
+   {who:'v_lin',text:'那到底是谁杀了人？',press:'（法庭安静下来。）',
+    ev:'dna',break_:'DNA 证明死者是妹妹——而唯一有动机、也有机会的，是那个"一直左手戴表"的姐姐。',
+    lines:[{who:'det_shen',text:'她发现妹妹在冒用她的身份，甚至伪造了遗嘱。争执中，她动了手。'},{who:'det_shen',text:'然后她把妹妹的手表换到自己右手上——所有人都以为梅姐右手戴表，那就没人会怀疑她。'},
+      {who:'judge_chen',text:'本庭宣判：杀人罪名成立。'}]}
+ ]},
+ ending:[{who:'ast_xiaoman',text:'两个人……都叫梅姐。'},
+   {who:'det_shen',text:'证词互相矛盾的时候，先别急着抓说谎的人。有时候，这世上确实有两个一模一样的人。'}],
+ truth:'死者并非"梅姐"本人，而是她同卵双胞胎的妹妹。妹妹多年冒用姐姐身份生活，并伪造了一份把店铺留给"妹妹"的遗嘱。姐姐察觉后，当晚在咖啡店与妹妹争执并失手杀人。她刻意换上手表的佩戴手（右手），利用两名目击者"梅姐一直左手戴表"的固有印象制造矛盾。二十年前的合影、两只有无口红的咖啡杯、以及 0.2% 的 DNA 差异共同揭开了真相。'
+}
+];
+</script><script>
+/* ===================== 推理游戏引擎 ===================== */
+var G={caseId:null, scene:null, ev:[], seen:{}, flags:{}, phase:'explore', talk:null, qIdx:0,
+  court:null, penalty:3, log:[], unlocked:1, done:{}};
+var DLG={lines:[], i:0, typing:false, timer:null, done:null, choices:null};
+function $(id){ return document.getElementById(id); }
+function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function toast(t){ var e=$('toast'); e.textContent=t; e.className='on'; clearTimeout(e._t); e._t=setTimeout(function(){e.className=''},1800) }
+function saveLS(){ try{ localStorage.setItem('mystery_progress', JSON.stringify({unlocked:G.unlocked,done:G.done})) }catch(e){} }
+function loadLS(){ try{ var d=JSON.parse(localStorage.getItem('mystery_progress')||'{}'); if(d.unlocked) G.unlocked=d.unlocked; if(d.done) G.done=d.done }catch(e){} }
+function caseOf(id){ return CASES.filter(function(c){return c.id===id})[0] }
+function charOf(id){ return CHARS[id]||{name:id,img:id} }
+function hasEv(id){ return G.ev.indexOf(id)>=0 }
+function addEv(id){ if(hasEv(id)) return; G.ev.push(id); var e=EVS[id]; toast('获得证物：'+(e?e.name:id)); logAdd('获得证物「'+(e?e.name:id)+'」') }
+function logAdd(t){ G.log.push(t); if(G.log.length>200) G.log.shift() }
+/* ---------- 对话机 ---------- */
+function runLines(lines, done){
+  DLG.lines=lines||[]; DLG.i=0; DLG.done=done||null; DLG.choices=null;
+  dlgShow(true); nextLine();
+}
+function nextLine(){
+  var L=DLG.lines[DLG.i];
+  if(!L){ dlgShow(false); var d=DLG.done; DLG.done=null; if(d) d(); return }
+  if(L.ev) addEv(L.ev);
+  if(L.flag) G.flags[L.flag]=true;
+  if(L.act){ L.act(); }
+  showSpeaker(L.who);
+  if(L.choices){ DLG.choices=L.choices; typeText(L.text||'', function(){ renderChoices(L.choices) }); return }
+  DLG.choices=null;
+  typeText(L.text||'', null);
+}
+function typeText(t, cb){
+  var e=$('dtext'); e.innerHTML=''; DLG.typing=true; var i=0;
+  clearInterval(DLG.timer);
+  DLG.timer=setInterval(function(){
+    i+=1; e.textContent=t.slice(0,i);
+    if(i>=t.length){ clearInterval(DLG.timer); DLG.typing=false; if(cb) cb() }
+  },18);
+}
+function renderChoices(cs){
+  var box=$('choices'); box.innerHTML='';
+  cs.forEach(function(c){
+    var b=el('div','choice',c.t);
+    b.onclick=function(){ box.innerHTML=''; if(c.act) c.act(); else { DLG.i++; nextLine() } };
+    box.appendChild(b);
+  });
+}
+function advance(){
+  if(DLG.typing){ clearInterval(DLG.timer); DLG.typing=false; $('dtext').textContent=DLG.lines[DLG.i].text||'';
+    if(DLG.choices) renderChoices(DLG.choices); return }
+  if(DLG.choices) return;
+  DLG.i++; nextLine();
+}
+function dlgShow(on){ $('dlg').className=on?'on':'' }
+function showSpeaker(id){
+  var sp=$('speaker');
+  if(!id){ sp.style.display='none'; return }
+  sp.style.display=''; sp.textContent=charOf(id).name;
+  showChar(id);
+}
+function charColor(id){ var h=0; for(var i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))%360; return 'hsl('+h+',28%,26%)' }
+function bgOf(f){ return 'url(img/'+f+'.jpg), linear-gradient(180deg,'+charColor(f)+',#0a0f1a)' }
+function showChar(id){
+  var c=charOf(id); ['charL','charR','charC'].forEach(function(k){ $(k).className='' });
+  var img=bgOf(c.img||id);
+  if(c.side==='L'){ $('charL').style.backgroundImage=img; $('charL').className='on' }
+  else if(c.side==='R'){ $('charR').style.backgroundImage=img; $('charR').className='on' }
+  else { $('charC').style.backgroundImage=img; $('charC').className='on' }
+}
+function clearChars(){ ['charL','charR','charC'].forEach(function(k){ $(k).className='' }) }
+/* ---------- 案件流程 ---------- */
+function startCase(cid){
+  var C=caseOf(cid); if(!C) return;
+  G.caseId=cid; G.phase='explore'; G.ev=[]; G.seen={}; G.flags={}; G.talk=null; G.log=[];
+  G.penalty=3; G.court=null; G.scene=C.scenes[0].id;
+  $('title').classList.add('hide');
+  renderScene();
+  runLines(C.intro, function(){ G.phase='explore'; renderAll() });
+}
+function curCase(){ return caseOf(G.caseId) }
+function curScene(){ var C=curCase(); return C.scenes.filter(function(s){return s.id===G.scene})[0] }
+function renderScene(){
+  var s=curScene(); if(!s) return;
+  $('sceneBg').style.backgroundImage=bgOf(s.bg);
+  $('locName').textContent=s.name;
+  clearChars(); removeHots();
+  (s.chars||[]).forEach(function(cid){
+    var c=charOf(cid);
+    var d=el('div',null); d.style.cssText='position:absolute;bottom:0;width:30%;height:62%;background-size:contain;background-repeat:no-repeat;background-position:bottom center;cursor:pointer;z-index:5';
+    d.style.backgroundImage='url(img/'+(c.img||cid)+'.jpg)';
+    d.style.left=(c.x!==undefined?c.x:(c.side==='L'?4:66))+'%';
+    d.onclick=function(){ talkTo(cid) };
+    $('stage').appendChild(d);
+  });
+  renderHots(); renderHud(); if(DLG.lines.length===0) dlgShow(false);
+}
+function removeHots(){ Array.prototype.slice.call(document.querySelectorAll('.hot')).forEach(function(h){ h.remove() }) }
+function renderHots(){
+  var s=curScene(); if(!s||G.phase!=='explore') return;
+  (s.hots||[]).forEach(function(h,i){
+    if(G.seen[G.scene+'_'+i]) return;
+    var d=el('div','hot',h.label);
+    d.style.left=(h.x*100)+'%'; d.style.top=(h.y*100)+'%';
+    d.style.width=(h.w*100)+'%'; d.style.minWidth='54px'; d.style.height=(h.h*100)+'%'; d.style.minHeight='54px';
+    d.onclick=function(){ examine(h,i) };
+    $('stage').appendChild(d);
+  });
+}
+function examine(h,i){
+  G.seen[G.scene+'_'+i]=true; removeHots();
+  if(h.ev) addEv(h.ev);
+  if(h.flag) G.flags[h.flag]=true;
+  var lines=[{who:null,text:'【调查：'+h.label+'】\n'+(h.look||'……没什么特别的。')}];
+  runLines(lines, function(){ renderHots() });
+}
+function talkTo(cid){
+  var C=curCase();
+  var t=(C.talks||[]).filter(function(x){return x.id===cid})[0];
+  if(!t){ runLines([{who:cid,text:'（他/她没有想说的。）'}]); return }
+  G.phase='talk'; G.talk=cid;
+  var lines=[{who:cid,text:t.greet||'……'}];
+  lines.push({who:cid,text:'',choices:t.questions.map(function(q,qi){
+    return {t:'◆ '+q.q, act:function(){ askQ(t,qi) }};
+  }).concat([{t:'（结束对话）',act:function(){ dlgShow(false); G.phase='explore'; G.talk=null; renderAll() }}])});
+  runLines(lines);
+}
+function askQ(t,qi){
+  var q=t.questions[qi]; logAdd('询问：'+q.q+' → '+charOf(t.id).name);
+  var lines=(q.a||[]).map(function(x){ return {who:x.w||t.id, text:x.t, ev:x.ev, flag:x.flag} });
+  // 该问题若配置了"矛盾点"，询问后开放"出示证物"
+  if(q.reveal) lines.push({who:null,text:'（这里似乎可以用证物反驳 —— 点右上「出示证物」。）',flag:'can_present_'+t.id+'_'+qi});
+  lines.push({who:null,text:'',choices:[{t:'（继续问别的）',act:function(){ talkTo(t.id) }},
+    {t:'（出示证物）',act:function(){ presentUI(function(evid){ presentTo(t,qi,evid) }) }}]});
+  runLines(lines);
+}
+function presentUI(cb){
+  var h='<h3>出示证物</h3>';
+  h+='<div class="evrow" style="border-color:#5d7fb8" data-cancel="1"><div class="ic">✕</div><div><b>取消</b></div></div>';
+  G.ev.forEach(function(id){ var e=EVS[id]; if(!e) return;
+    h+='<div class="evrow" data-ev="'+id+'"><div class="ic">'+e.icon+'</div><div><b>'+e.name+'</b><small>'+e.desc+'</small></div></div>' });
+  openModal(h, function(target){
+    if(target.getAttribute('data-cancel')){ closeModal(); return }
+    var id=target.getAttribute('data-ev'); if(!id) return;
+    closeModal(); cb(id);
+  });
+}
+function presentTo(t,qi,evid){
+  var q=t.questions[qi];
+  var hit=(q.present||[]).filter(function(p){ return p.ev===evid })[0];
+  if(hit){ addEv(evid); runLines(hit.lines, function(){ if(hit.flag) G.flags[hit.flag]=true; talkTo(t.id) }) }
+  else { runLines([{who:t.id,text:(q.wrong||'……这跟我的事有什么关系？')}], function(){ talkTo(t.id) }) }
+}
+/* ---------- 法庭 ---------- */
+function startCourt(){
+  var C=curCase(); if(!C.court){ toast('本案不需要上法庭'); return }
+  G.phase='court'; G.court={ idx:0, pressed:{}, wrong:0 };
+  $('sceneBg').style.backgroundImage=bgOf('sc_court');
+  $('locName').textContent='法庭 · '+C.title;
+  clearChars(); removeHots(); renderHud(); renderCourt();
+}
+function renderCourt(){
+  var C=curCase(), st=C.court.statements[G.court.idx];
+  var who=charOf(st.who);
+  // 证人站中间
+  clearChars();
+  $('charC').style.backgroundImage=bgOf(who.img||st.who); $('charC').className='on';
+  var bar=$('courtBar'); bar.className=''; bar.innerHTML='';
+  var b1=el('button','btn g','追问'); b1.onclick=function(){ pressStatement() };
+  var b2=el('button','btn y','出示证物'); b2.onclick=function(){ presentUI(courtPresent) };
+  var b3=el('button','btn g','证物'); b3.onclick=function(){ showEvidence() };
+  bar.appendChild(b1); bar.appendChild(b2); bar.appendChild(b3);
+  runLines([{who:null,text:'【证言 '+(G.court.idx+1)+'/'+C.court.statements.length+'】'},{who:st.who,text:st.text}]);
+}
+function pressStatement(){
+  var C=curCase(), st=C.court.statements[G.court.idx];
+  G.court.pressed[G.court.idx]=true;
+  if(st.press){ runLines([{who:st.who,text:st.press}], function(){ renderCourt() }) }
+  else runLines([{who:st.who,text:'（这有什么问题吗？）'}], function(){ renderCourt() });
+}
+function courtPresent(evid){
+  var C=curCase(), st=C.court.statements[G.court.idx];
+  if(st.ev===evid){
+    objFlash(); G.court.pressed[G.court.idx]=true;
+    var lines=[{who:null,text:'【异议成立！】'},{who:'det_shen',text:st.break_||'这句话和证物矛盾。'}];
+    if(st.lines) lines=lines.concat(st.lines);
+    runLines(lines, function(){
+      G.court.idx++;
+      if(G.court.idx>=C.court.statements.length){ caseSolved() } else renderCourt();
+    });
+  } else {
+    G.court.wrong++; G.penalty--;
+    if(G.penalty<=0){ runLines([{who:'pros_yan',text:'证据不足。法庭无法接受这样的推理。'},{who:'judge_chen',text:'本庭宣判：被告无罪。案件未破。'}], function(){ backToTitle() }); return }
+    runLines([{who:'judge_chen',text:'这与本案证言无关。请注意你的举证。（剩余机会 '+G.penalty+'）'}], function(){ renderCourt() });
+  }
+}
+function objFlash(){ var o=$('obj'); o.className='on'; setTimeout(function(){ o.className='' },900);
+  try{ beep(880,0.12,'square'); beep(1320,0.12,'square',0.13) }catch(e){} }
+function caseSolved(){
+  var C=curCase();
+  G.done[C.id]=true; G.unlocked=Math.max(G.unlocked, (CASES.map(function(c){return c.id}).indexOf(C.id)+2));
+  saveLS();
+  runLines((C.ending||[]).concat([{who:null,text:'【案件告破】'+C.title}]), function(){
+    openModal('<h3>案件告破</h3><div style="font-size:14px;line-height:1.8;color:#cfe0ff">'+
+      C.truth+'</div><div style="margin-top:12px;text-align:center"><button class="btn" id="bk">返回案件列表</button></div>',
+      function(t){ if(t.id==='bk'){ closeModal(); backToTitle() } });
+  });
+}
+/* ---------- HUD / 弹层 ---------- */
+function renderHud(){
+  var h=$('hud'); h.innerHTML='';
+  if(G.phase==='court'){ $('courtBar').className=''; return }
+  $('courtBar').className='hide';
+  var b1=el('button','hbtn','证物 '+(G.ev.length)); b1.onclick=showEvidence;
+  var b2=el('button','hbtn','案情'); b2.onclick=showBrief;
+  var b3=el('button','hbtn gold','上法庭'); b3.onclick=function(){
+    var C=curCase();
+    if(G.ev.length<3){ toast('证物太少，先多调查现场'); return }
+    startCourt();
+  };
+  var b4=el('button','hbtn','存档'); b4.onclick=function(){ saveLS(); toast('进度已保存') };
+  var b5=el('button','hbtn red','退出'); b5.onclick=backToTitle;
+  [b1,b2,b3,b4,b5].forEach(function(b){ h.appendChild(b) });
+}
+function showEvidence(){
+  var h='<h3>证物清单（'+G.ev.length+'）</h3>';
+  if(!G.ev.length) h+='<div style="color:#8fa4c8;font-size:13px">还没有找到任何证物，去现场调查吧。</div>';
+  G.ev.forEach(function(id){ var e=EVS[id]; if(!e) return;
+    h+='<div class="evrow"><div class="ic">'+e.icon+'</div><div><b>'+e.name+'</b><small>'+e.desc+'</small></div></div>' });
+  h+='<div style="text-align:center;margin-top:12px"><button class="btn g" id="evclose">关闭</button></div>';
+  openModal(h, function(t){ if(t.id==='evclose') closeModal() });
+}
+function showBrief(){
+  var C=curCase();
+  openModal('<h3>'+C.title+'</h3><div style="font-size:13.5px;line-height:1.85;color:#cfe0ff">'+C.brief+'</div>'+
+    '<div style="margin-top:12px;color:#8fa4c8;font-size:12.5px">调查记录：<br>'+(G.log.slice(-8).join('<br>')||'（暂无）')+'</div>'+
+    '<div style="text-align:center;margin-top:12px"><button class="btn g" id="bclose">关闭</button></div>',
+    function(t){ if(t.id==='bclose') closeModal() });
+}
+function openModal(html, handler){
+  $('mbox').innerHTML=html; $('modal').className='';
+  $('mbox').onclick=function(e){
+    var t=e.target.closest?e.target.closest('[data-ev],[data-cancel],#evclose,#bclose,#bk'):e.target;
+    if(!t) return; if(handler) handler(t);
+  };
+}
+function closeModal(){ $('modal').className='hide' }
+/* ---------- 标题 ---------- */
+function showTitle(){
+  var h='<h1>逆 证</h1><p>DETECTIVE MYSTERY · 现场调查 / 询问证人 / 法庭对决</p>';
+  CASES.forEach(function(c,i){
+    var lock=(i+1)>G.unlocked, done=G.done[c.id];
+    h+='<div class="caseCard'+(lock?' lock':'')+'" data-case="'+(lock?'':c.id)+'">'+
+      '<span class="tag">'+c.diff+(done?' · 已破':(lock?' · 未解锁':''))+'</span>'+
+      '<b>'+c.title+'</b><small>'+c.sub+'</small></div>';
+  });
+  h+='<div style="color:#5f7096;font-size:11.5px;margin-top:6px">提示：先在场景里调查闪光点收集证物 → 询问在场人物 → 证物足够后「上法庭」→ 用证物击破证言</div>';
+  $('title').innerHTML=h; $('title').className='';
+  $('title').onclick=function(e){
+    var t=e.target.closest?e.target.closest('[data-case]'):null; if(!t) return;
+    var cid=t.getAttribute('data-case'); if(!cid) return;
+    startCase(cid);
+  };
+  clearChars(); removeHots(); dlgShow(false); $('hud').innerHTML=''; $('courtBar').className='hide';
+}
+function backToTitle(){ G.caseId=null; dlgShow(false); showTitle() }
+/* ---------- 音效 ---------- */
+var AC=null;
+function beep(f,dur,type,delay){
+  try{
+    if(!AC) AC=new (window.AudioContext||window.webkitAudioContext)();
+    var o=AC.createOscillator(), g=AC.createGain();
+    o.type=type||'sine'; o.frequency.value=f;
+    var t0=AC.currentTime+(delay||0);
+    g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(0.06,t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+dur+0.02);
+  }catch(e){}
+}
+/* ---------- 启动 ---------- */
+function boot(){
+  loadLS();
+  document.addEventListener('click', function(e){
+    if(G.phase==='court') return;
+    if(DLG.lines.length) advance();
+  });
+  showTitle();
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+</script></body></html>
