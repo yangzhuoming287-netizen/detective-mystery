@@ -785,7 +785,7 @@ function showTitle(){
   var h='<h1>逆 证</h1><p>DETECTIVE MYSTERY · 现场调查 / 询问证人 / 法庭对决</p>';
   CASES.forEach(function(c,i){
     var lock=(i+1)>G.unlocked, done=G.done[c.id];
-    h+='<div class="caseCard'+(lock?' lock':'')+'" data-case="'+(lock?'':c.id)+'">'+
+    h+='<div class="caseCard'+(lock?' lock':'')+'" '+(lock?('data-locked="'+c.id+'"'):('data-case="'+c.id+'"'))+'>'+
       '<span class="tag">'+c.diff+(done?' · 已破':(lock?' · 未解锁':''))+'</span>'+
       '<b>'+c.title+'</b><small>'+c.sub+'</small></div>';
   });
@@ -793,7 +793,19 @@ function showTitle(){
   ensure('title').innerHTML=h; ensure('title').className='';
   ensure('title').onclick=function(e){
     var t=e.target.closest?e.target.closest('[data-case]'):null; if(!t) return;
-    var cid=t.getAttribute('data-case'); if(!cid) return;
+    var cid=t.getAttribute('data-case');
+    if(!cid){                                   // 未解锁：允许直接挑战
+      var lock=e.target.closest?e.target.closest('[data-locked]'):null;
+      if(!lock) return;
+      var lid=lock.getAttribute('data-locked');
+      openModal('<h3>该案件尚未解锁</h3><div style="color:#cfe0ff;font-size:13.5px;line-height:1.8">建议先玩前面几个案件熟悉"调查—询问—出示证物"的节奏，尤其是教学模式《书房里的沉默》。<br><br>不过你想直接挑战也可以——难度会很高。</div>'+
+        '<div style="margin-top:14px;text-align:center"><button class="btn y" id="godirect">直接挑战</button> <button class="btn g" id="goback">先去前面</button></div>',
+        function(t2){
+          if(t2.id==='godirect'){ closeModal(); startCase(lid) }
+          else if(t2.id==='goback') closeModal();
+        });
+      return;
+    }
     startCase(cid);
   };
   clearChars(); removeHots(); dlgShow(false); $('hud').innerHTML=''; $('courtBar').className='hide';
