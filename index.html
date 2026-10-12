@@ -56,6 +56,8 @@ html,body{margin:0;height:100%;background:#05080f;color:#eef2f8;overflow:hidden;
 #mbox h3{margin:0 0 10px;font-size:15px;color:#ffe8a8}
 .evrow{display:flex;gap:10px;align-items:flex-start;background:#0b1425;border:1px solid #2a3c5e;border-radius:9px;padding:9px;margin-bottom:7px;cursor:pointer}
 .evrow:active{background:#16233c}
+.evimg{display:inline-block;border-radius:8px;background-size:cover;background-position:center;background-color:#1b2745;border:1px solid #3a5178;position:relative;overflow:hidden}
+.evimg i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:19px}
 .evrow .ic{width:38px;height:38px;border-radius:8px;background:#1b2745;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
 .evrow b{font-size:13.5px;color:#eaf2ff}
 .evrow small{display:block;color:#8fa4c8;font-size:11.5px;margin-top:3px;line-height:1.5}
@@ -1053,13 +1055,50 @@ var DLG={lines:[], i:0, typing:false, timer:null, done:null, choices:null};
 function $(id){ return document.getElementById(id); }
 function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
 function ensure(id){ var e=$(id); if(!e){ e=document.createElement('div'); e.id=id; document.body.appendChild(e); } return e }
+/* 证物配图：物证=AI 插画；证言=说话人立绘；都没有才退回 emoji */
+function evSpeaker(id){
+  var e=EVS[id]; if(!e||e.type!=='testimony') return null;
+  var key=e.name.replace(/的证词|的失态|谈.*/,'');
+  var hit=Object.keys(CHARS).filter(function(c){
+    var n=CHARS[c].name.replace(/（[^）]*）/,'');
+    return n && (e.name.indexOf(n)===0 || key.indexOf(n)===0) })[0];
+  return hit||null;
+}
+function evIcon(id,size){
+  var e=EVS[id]; if(!e) return '';
+  var px=size||44;
+  var sp=evSpeaker(id);
+  if(sp) return '<span class="evimg" style="width:'+px+'px;height:'+px+'px;background-image:url(img/'+sp+'.jpg)"></span>';
+  return '<span class="evimg" style="width:'+px+'px;height:'+px+'px;background-image:url(ev/'+id+'.jpg)"><i>'+(e.icon||'?')+'</i></span>';
+}
 function toast(t){ var e=$('toast'); e.textContent=t; e.className='on'; clearTimeout(e._t); e._t=setTimeout(function(){e.className=''},1800) }
 function saveLS(){ try{ localStorage.setItem('mystery_progress', JSON.stringify({unlocked:G.unlocked,done:G.done})) }catch(e){} }
 function loadLS(){ try{ var d=JSON.parse(localStorage.getItem('mystery_progress')||'{}'); if(d.unlocked) G.unlocked=d.unlocked; if(d.done) G.done=d.done }catch(e){} }
 function caseOf(id){ return CASES.filter(function(c){return c.id===id})[0] }
 function charOf(id){ return CHARS[id]||{name:id,img:id} }
 function hasEv(id){ return G.ev.indexOf(id)>=0 }
-function addEv(id){ if(hasEv(id)) return; G.ev.push(id); var e=EVS[id]; toast('获得证物：'+(e?e.name:id)); logAdd('获得证物「'+(e?e.name:id)+'」') }
+function addEv(id){
+  if(hasEv(id)) return;
+  G.ev.push(id);
+  var e=EVS[id];
+  logAdd('获得'+(e&&e.type==='testimony'?'证言':'证物')+'「'+(e?e.name:id)+'」');
+  try{ evCard(id) }catch(err){}
+}
+/* 新证物卡片 */
+function evCard(id){
+  var e=EVS[id]; if(!e) return;
+  var isT=(e.type==='testimony');
+  var h='<div style="text-align:center"><div style="font-size:12px;color:#c9a227;letter-spacing:2px">'+(isT?'获得证言':'获得证物')+'</div>'+
+    '<div style="margin:10px auto">'+evIcon(id,132)+'</div>'+
+    '<div style="font-size:15.5px;font-weight:700;color:#ffe8a8">'+e.name+'</div>'+
+    '<div style="color:#cfe0ff;font-size:12.5px;line-height:1.75;margin-top:8px;text-align:left">'+e.desc+'</div>'+
+    (e.fake?'<div style="color:#e0a94a;font-size:11.5px;margin-top:8px">※ 来源存疑，需要进一步核实</div>':'')+
+    '</div><div style="text-align:center;margin-top:14px"><button class="btn" id="evok">收下</button></div>';
+  var box=$('mbox');
+  box.innerHTML=h; $('modal').className='';
+  box.onclick=function(ev){ var t=ev.target.closest?ev.target.closest('#evok'):null; if(t) closeModal() };
+  beep(660,0.08,'sine'); beep(990,0.1,'sine',0.08);
+}
 function logAdd(t){ G.log.push(t); if(G.log.length>200) G.log.shift() }
 /* ---------- 对话机 ---------- */
 function runLines(lines, done){
@@ -1070,6 +1109,10 @@ function nextLine(){
   var L=DLG.lines[DLG.i];
   if(!L){ dlgShow(false); var d=DLG.done; DLG.done=null; if(d) d(); return }
   if(L.ev) addEv(L.ev);
+  if(L.showEv && hasEv(L.showEv)){
+    var se=EVS[L.showEv];
+    L.text=(L.text||'')+'\n\n［证物：'+se.name+'］';
+  }
   if(L.flag) G.flags[L.flag]=true;
   if(L.act){ L.act(); }
   showSpeaker(L.who);
@@ -1202,7 +1245,7 @@ function presentUI(cb){
     var A=EVS[a]||{}, B=EVS[b]||{};
     return (A.type==='testimony'?0:1)-(B.type==='testimony'?0:1) });
   order.forEach(function(id){ var e=EVS[id]; if(!e) return;
-    h+='<div class="evrow" data-ev="'+id+'"><div class="ic">'+e.icon+'</div><div><b>'+e.name+
+    h+='<div class="evrow" data-ev="'+id+'"><div class="ic">'+evIcon(id,42)+'</div><div><b>'+e.name+
       (e.type==='testimony'?' <span style="color:#8fe08f;font-size:10.5px">证言</span>':'')+'</b><small>'+e.desc+'</small></div></div>' });
   openModal(h, function(target){
     if(target.getAttribute('data-cancel')){ closeModal(); return }
@@ -1294,7 +1337,7 @@ function showEvidence(){
     if(!list.length) return;
     h+='<div style="font-size:12px;color:#c9a227;margin:8px 0 4px">'+title+'</div>';
     list.forEach(function(id){ var e=EVS[id]; if(!e) return;
-      h+='<div class="evrow'+(cls?' '+cls:'')+'" style="'+(e.fake?'opacity:.92;border-color:#7a5a2a':'')+'"><div class="ic">'+e.icon+'</div><div><b>'+e.name+
+      h+='<div class="evrow'+(cls?' '+cls:'')+'" style="'+(e.fake?'opacity:.92;border-color:#7a5a2a':'')+'"><div class="ic">'+evIcon(id,42)+'</div><div><b>'+e.name+
         (e.fake?' <span style="color:#c9a227;font-size:10.5px">（待核实）</span>':'')+'</b><small>'+e.desc+'</small></div></div>' });
   }
   var testi=G.ev.filter(function(id){ return EVS[id]&&EVS[id].type==='testimony' });
