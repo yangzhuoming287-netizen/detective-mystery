@@ -1092,7 +1092,7 @@ function evIcon(id,size){
   var px=size||44;
   var sp=evSpeaker(id);
   if(sp) return '<span class="evimg" style="width:'+px+'px;height:'+px+'px;background-image:url(img/'+sp+'.jpg)"></span>';
-  return '<span class="evimg" style="width:'+px+'px;height:'+px+'px;background-image:url(ev/'+id+'.jpg)"><i>'+(e.icon||'?')+'</i></span>';
+  return '<span class="evimg" style="width:'+px+'px;height:'+px+'px;background-image:url(vec/'+id+'.png), url(ev/'+id+'.jpg)"><i>'+(e.icon||'?')+'</i></span>';
 }
 function toast(t){ var e=$('toast'); e.textContent=t; e.className='on'; clearTimeout(e._t); e._t=setTimeout(function(){e.className=''},1800) }
 function saveLS(){ try{ localStorage.setItem('mystery_progress', JSON.stringify({unlocked:G.unlocked,done:G.done})) }catch(e){} }
