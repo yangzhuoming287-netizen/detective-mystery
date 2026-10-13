@@ -1204,7 +1204,7 @@ function bindStageSearch(){
 }
 function renderScene(){
   var s=curScene(); if(!s) return;
-  $('sceneBg').style.backgroundImage='url(scene2/'+G.caseId+'_'+s.id+'.jpg), url(scene/'+G.caseId+'_'+s.id+'_v2.jpg), url(img/'+s.bg+'.jpg), '+
+  $('sceneBg').style.backgroundImage='url(scene3/'+G.caseId+'_'+s.id+'.jpg), url(scene2/'+G.caseId+'_'+s.id+'.jpg), url(scene/'+G.caseId+'_'+s.id+'_v2.jpg), url(img/'+s.bg+'.jpg), '+
     'linear-gradient(180deg,'+charColor(s.bg)+',#0a0f1a)';
   $('locName').textContent=s.name;
   clearChars(); removeHots();
@@ -1314,7 +1314,7 @@ function startFinale(){
   var C=curCase(); if(!C.court){ toast('本案不需要对质'); return }
   G.phase='court'; G.court={ idx:0, pressed:{}, wrong:0 };
   var _fb=(C.finaleBg||curScene().bg), _fsc=(C.finaleBg||curScene().id);
-  $('sceneBg').style.backgroundImage='url(scene2/'+C.id+'_'+_fsc+'.jpg), url(scene/'+C.id+'_'+_fsc+'_v2.jpg), url(img/'+_fb+'.jpg), '+
+  $('sceneBg').style.backgroundImage='url(scene3/'+C.id+'_'+_fsc+'.jpg), url(scene2/'+C.id+'_'+_fsc+'.jpg), url(scene/'+C.id+'_'+_fsc+'_v2.jpg), url(img/'+_fb+'.jpg), '+
     'linear-gradient(180deg,'+charColor(_fb)+',#0a0f1a)';
   $('locName').textContent='现场对质 · '+(C.culpritName||'凶手');
   clearChars(); removeHots(); renderHud(); renderCourt();
