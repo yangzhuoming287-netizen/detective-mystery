@@ -1224,7 +1224,7 @@ function bindStageSearch(){
 }
 function renderScene(){
   var s=curScene(); if(!s) return;
-  $('sceneBg').style.backgroundImage='url(scene2/'+G.caseId+'_'+s.id+'.jpg), url(scene/'+G.caseId+'_'+s.id+'_v2.jpg), url(img/'+s.bg+'.jpg), '+
+  $('sceneBg').style.backgroundImage='url(scene7/'+G.caseId+'_'+s.id+'.jpg), url(scene2/'+G.caseId+'_'+s.id+'.jpg), url(scene/'+G.caseId+'_'+s.id+'_v2.jpg), url(img/'+s.bg+'.jpg), '+
     'linear-gradient(180deg,'+charColor(s.bg)+',#0a0f1a)';
   $('locName').textContent=s.name;
   clearChars(); removeHots();
@@ -1334,7 +1334,7 @@ function startFinale(){
   var C=curCase(); if(!C.court){ toast('本案不需要对质'); return }
   G.phase='court'; G.court={ idx:0, pressed:{}, wrong:0 };
   var _fb=(C.finaleBg||curScene().bg), _fsc=(C.finaleBg||curScene().id);
-  $('sceneBg').style.backgroundImage='url(scene2/'+C.id+'_'+_fsc+'.jpg), url(scene/'+C.id+'_'+_fsc+'_v2.jpg), url(img/'+_fb+'.jpg), '+
+  $('sceneBg').style.backgroundImage='url(scene7/'+C.id+'_'+_fsc+'.jpg), url(scene2/'+C.id+'_'+_fsc+'.jpg), url(scene/'+C.id+'_'+_fsc+'_v2.jpg), url(img/'+_fb+'.jpg), '+
     'linear-gradient(180deg,'+charColor(_fb)+',#0a0f1a)';
   $('locName').textContent='现场对质 · '+(C.culpritName||'凶手');
   clearChars(); removeHots(); renderHud(); renderCourt();
@@ -1789,7 +1789,8 @@ function doCombo(a,b){
       var w=(h.w||0.16)*100; if(w<9) w=9; if(w>20) w=20;
       d.style.width=w+'%';
       d.innerHTML='<img src="vec/'+h.ev+'.png" alt="">';
-      if(!G.seen[G.scene+'_'+i]) d.classList.add('veiled');   // 未发现：隐形
+      var BAKED=['c1_sc_study'];
+      if(BAKED.indexOf(G.caseId+'_'+G.scene)<0 && !G.seen[G.scene+'_'+i]) d.classList.add('veiled');   // 除已画入画面的场景外，未发现即隐形
       d.onclick=function(e){ if(e&&e.stopPropagation) e.stopPropagation(); examine(h,i) };
       st.appendChild(d);
       objs.push({h:h,i:i,el:d});
